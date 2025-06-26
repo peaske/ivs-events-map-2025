@@ -1,0 +1,8 @@
+{
+  "name": "ivs-events-map",
+  "homepage": "https://peaske.github.io/ivs-events-map-2025",
+  "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d dist"
+  }
+}

@@ -1,0 +1,421 @@
+import { useEffect, useRef, useState } from 'react'
+import { Loader } from '@googlemaps/js-api-loader'
+import type { Event } from '../hooks/useEvents'
+
+// グローバル型定義を追加
+declare global {
+  interface Window {
+    focusOnEvent?: (event: any) => void;
+    focusOnEventWithPopup?: (event: any) => void;
+    focusOnUserLocation?: (location: {lat: number, lng: number}) => void;
+  }
+}
+
+interface EventMapProps {
+  events: Event[]
+  selectedEvent: Event | null
+  onEventSelect: (event: Event) => void
+  userLocation?: {lat: number, lng: number} | null
+}
+
+const GOOGLE_MAPS_API_KEY = 'AIzaSyDAPia8Rfqck7my2z3Wj1NkBqLornWFutk'
+
+export const EventMap: React.FC<EventMapProps> = ({ 
+  events, 
+  selectedEvent, 
+  onEventSelect,
+  userLocation 
+}) => {
+  const mapRef = useRef<HTMLDivElement>(null)
+  const [map, setMap] = useState<google.maps.Map | null>(null)
+  const [markers, setMarkers] = useState<google.maps.Marker[]>([])
+  const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null)
+  const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null)
+
+  // Google Maps初期化
+  useEffect(() => {
+    const initMap = async () => {
+      if (!mapRef.current) return
+
+      try {
+        const loader = new Loader({
+          apiKey: GOOGLE_MAPS_API_KEY,
+          version: 'weekly',
+          libraries: ['maps']
+        })
+
+        const google = await loader.load()
+        
+        // 日本中心の地図（参考画像と同じスタイル）
+        const mapInstance = new google.maps.Map(mapRef.current, {
+          center: { lat: 35.6762, lng: 139.6503 }, // 東京
+          zoom: 6,
+          mapTypeControl: true,
+          mapTypeControlOptions: {
+            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
+            position: google.maps.ControlPosition.TOP_LEFT,
+            mapTypeIds: [
+              google.maps.MapTypeId.ROADMAP,
+              google.maps.MapTypeId.SATELLITE
+            ]
+          },
+          zoomControl: true,
+          zoomControlOptions: {
+            position: google.maps.ControlPosition.RIGHT_BOTTOM
+          },
+          scaleControl: true,
+          streetViewControl: false,
+          fullscreenControl: true,
+          fullscreenControlOptions: {
+            position: google.maps.ControlPosition.TOP_RIGHT
+          },
+          styles: [
+            // Google Maps標準スタイル（参考画像と同じ）
+            {
+              featureType: 'water',
+              elementType: 'geometry.fill',
+              stylers: [{ color: '#a2daf2' }]
+            },
+            {
+              featureType: 'landscape',
+              elementType: 'geometry.fill',
+              stylers: [{ color: '#abce83' }]
+            },
+            {
+              featureType: 'road',
+              elementType: 'geometry',
+              stylers: [{ color: '#ffffff' }]
+            }
+          ]
+        })
+
+        const infoWindowInstance = new google.maps.InfoWindow()
+        
+        setMap(mapInstance)
+        setInfoWindow(infoWindowInstance)
+        
+        console.log('✅ Google Maps初期化完了')
+        
+      } catch (error) {
+        console.error('❌ Google Maps初期化エラー:', error)
+      }
+    }
+
+    initMap()
+  }, [])
+
+  // マーカー更新
+  useEffect(() => {
+    if (!map || !window.google) return
+
+    // 既存マーカーをクリア
+    markers.forEach(marker => marker.setMap(null))
+    setMarkers([])
+
+    // 座標があるイベントのみマーカー作成
+    const newMarkers = events
+      .filter(event => event.location?.geo?.lat && event.location?.geo?.lng)
+      .map(event => {
+        const marker = new google.maps.Marker({
+          position: {
+            lat: event.location!.geo!.lat!,
+            lng: event.location!.geo!.lng!
+          },
+          map: map,
+          title: event.title,
+          icon: {
+            path: "M12,2C8.13,2 5,5.13 5,9c0,5.25 7,13 7,13s7,-7.75 7,-13C19,5.13 15.87,2 12,2z",
+            fillColor: '#ea4335',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2,
+            scale: 1.2,
+            anchor: new google.maps.Point(12, 24)
+          }
+        })
+
+        // マーカークリックイベント
+        marker.addListener('click', () => {
+          // 地図をそのピンの近くにズーム（添付-1レベル）
+          map.panTo({
+            lat: event.location!.geo!.lat!,
+            lng: event.location!.geo!.lng!
+          })
+          map.setZoom(18) // より詳細なズーム（添付-1レベル）
+          
+          // カスタムInfoWindow表示
+          if (infoWindow) {
+            // 既存のInfoWindowを閉じる
+            infoWindow.close()
+            
+            const eventDate = new Date(event.startAt)
+            
+            infoWindow.setContent(`
+              <div style="
+                background: white; 
+                border-radius: 8px; 
+                padding: 15px; 
+                max-width: 280px; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                position: relative;
+                margin-bottom: 8px;
+                font-family: system-ui, -apple-system, sans-serif;
+              ">
+                <h3 style="
+                  margin: 0 0 8px 0; 
+                  font-size: 14px; 
+                  font-weight: 600; 
+                  color: #333;
+                  line-height: 1.3;
+                ">${event.title}</h3>
+                
+                <p style="
+                  margin: 4px 0; 
+                  font-size: 12px; 
+                  color: #666;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                ">
+                  📅 ${eventDate.toLocaleDateString('ja-JP', {
+                    month: 'short',
+                    day: 'numeric'
+                  })} ${eventDate.toLocaleTimeString('ja-JP', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </p>
+                
+                ${event.location?.displayText ? `
+                  <p style="
+                    margin: 4px 0 0 0; 
+                    font-size: 12px; 
+                    color: #666;
+                    display: flex;
+                    align-items: center;
+                    gap: 4px;
+                  ">
+                    📍 ${event.location.displayText}
+                  </p>
+                ` : ''}
+              </div>
+            `)
+            infoWindow.open(map, marker)
+          }
+        })
+
+        return marker
+      })
+
+    setMarkers(newMarkers)
+    
+    console.log(`📍 ${newMarkers.length}個のマーカーを配置`)
+
+    // 地図の範囲をマーカーに合わせて調整
+    if (newMarkers.length > 0) {
+      const bounds = new google.maps.LatLngBounds()
+      newMarkers.forEach(marker => {
+        bounds.extend(marker.getPosition()!)
+      })
+      map.fitBounds(bounds)
+      
+      // ズームが近すぎる場合は調整
+      google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+        if (map.getZoom()! > 15) {
+          map.setZoom(15)
+        }
+      })
+    }
+
+  }, [map, events, onEventSelect, infoWindow])
+
+  // 外部からのイベントフォーカス機能を追加
+  useEffect(() => {
+    // 通常のフォーカス（吹き出しなし）
+    window.focusOnEvent = (event: any) => {
+      if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
+      
+      map.panTo({
+        lat: event.location.geo.lat,
+        lng: event.location.geo.lng
+      })
+      map.setZoom(14)
+    }
+    
+    // フォーカス＋吹き出し表示
+    window.focusOnEventWithPopup = (event: any) => {
+      if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
+      
+      // 地図を移動
+      map.panTo({
+        lat: event.location.geo.lat,
+        lng: event.location.geo.lng
+      })
+      map.setZoom(18) // 詳細ズーム
+      
+      // 該当するマーカーを見つけて吹き出しを表示
+      setTimeout(() => {
+        const targetMarker = markers.find(marker => {
+          const position = marker.getPosition()
+          return position && 
+                 Math.abs(position.lat() - event.location.geo.lat) < 0.0001 &&
+                 Math.abs(position.lng() - event.location.geo.lng) < 0.0001
+        })
+        
+        if (targetMarker && infoWindow) {
+          const eventDate = new Date(event.startAt)
+          
+          infoWindow.setContent(`
+            <div style="
+              background: white; 
+              border-radius: 8px; 
+              padding: 15px; 
+              max-width: 280px; 
+              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+              position: relative;
+              margin-bottom: 8px;
+              font-family: system-ui, -apple-system, sans-serif;
+            ">
+              <h3 style="
+                margin: 0 0 8px 0; 
+                font-size: 14px; 
+                font-weight: 600; 
+                color: #333;
+                line-height: 1.3;
+              ">${event.title}</h3>
+              
+              <p style="
+                margin: 4px 0; 
+                font-size: 12px; 
+                color: #666;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+              ">
+                📅 ${eventDate.toLocaleDateString('ja-JP', {
+                  month: 'short',
+                  day: 'numeric'
+                })} ${eventDate.toLocaleTimeString('ja-JP', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+              
+              ${event.location?.displayText ? `
+                <p style="
+                  margin: 4px 0 0 0; 
+                  font-size: 12px; 
+                  color: #666;
+                  display: flex;
+                  align-items: center;
+                  gap: 4px;
+                ">
+                  📍 ${event.location.displayText}
+                </p>
+              ` : ''}
+            </div>
+          `)
+          infoWindow.open(map, targetMarker)
+        }
+      }, 500) // 地図移動完了後に吹き出し表示
+    }
+    
+    // 現在地フォーカス
+    window.focusOnUserLocation = (location: {lat: number, lng: number}) => {
+      if (!map) return
+      
+      map.panTo(location)
+      map.setZoom(15)
+    }
+  }, [map, markers, infoWindow])
+
+  // 現在地マーカーの更新
+  useEffect(() => {
+    console.log('🔄 現在地マーカー更新:', { 
+      map: !!map, 
+      userLocation,
+      hasGoogle: !!window.google 
+    })
+    
+    if (!map || !userLocation || !window.google) {
+      console.log('⚠️ マップ、位置情報、またはGoogleライブラリがありません')
+      return
+    }
+    
+    // 既存の現在地マーカーを削除
+    if (userMarker) {
+      console.log('🗑️ 既存マーカーを削除')
+      userMarker.setMap(null)
+    }
+    
+    console.log('📍 新しい現在地マーカーを作成:', userLocation)
+    
+    try {
+      // 新しい現在地マーカーを作成（より目立つデザイン）
+      const newUserMarker = new google.maps.Marker({
+        position: userLocation,
+        map: map,
+        title: '現在地',
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 12, // より大きく
+          fillColor: '#1a73e8', // より鮮やかな青
+          fillOpacity: 1,
+          strokeColor: '#ffffff',
+          strokeWeight: 4, // より太い白縁
+          strokeOpacity: 1
+        },
+        zIndex: 2000, // より高いzIndex
+        optimized: false // アニメーション有効
+      })
+      
+      // パルスアニメーション用の外側円
+      const pulseMarker = new google.maps.Marker({
+        position: userLocation,
+        map: map,
+        icon: {
+          path: google.maps.SymbolPath.CIRCLE,
+          scale: 20,
+          fillColor: '#1a73e8',
+          fillOpacity: 0.2,
+          strokeColor: '#1a73e8',
+          strokeWeight: 1,
+          strokeOpacity: 0.6
+        },
+        zIndex: 1999,
+        optimized: false
+      })
+      
+      setUserMarker(newUserMarker)
+      
+      console.log('✅ 現在地マーカーを配置完了（パルス効果付き）')
+      
+    } catch (error) {
+      console.error('❌ マーカー作成エラー:', error)
+    }
+  }, [map, userLocation])
+
+  // 選択されたイベントにフォーカス
+  useEffect(() => {
+    if (!map || !selectedEvent || !selectedEvent.location?.geo?.lat || !selectedEvent.location?.geo?.lng) return
+
+    map.setCenter({
+      lat: selectedEvent.location.geo.lat,
+      lng: selectedEvent.location.geo.lng
+    })
+    map.setZoom(14)
+
+  }, [map, selectedEvent])
+
+  return (
+    <div 
+      ref={mapRef} 
+      style={{ 
+        width: '100%', 
+        height: '100%',
+        minHeight: '100vh',
+        backgroundColor: '#f5f5f5' 
+      }}
+    />
+  )
+}
