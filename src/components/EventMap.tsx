@@ -8,6 +8,7 @@ declare global {
     focusOnEvent?: (event: any) => void;
     focusOnEventWithPopup?: (event: any) => void;
     focusOnUserLocation?: (location: {lat: number, lng: number}) => void;
+    showImageModal?: (imageUrl: string, eventTitle: string) => void;
   }
 }
 
@@ -31,6 +32,228 @@ export const EventMap: React.FC<EventMapProps> = ({
   const [markers, setMarkers] = useState<google.maps.Marker[]>([])
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null)
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null)
+
+  // 画像拡大モーダル表示関数
+  const showImageModal = (imageUrl: string, eventTitle: string) => {
+    // 既存のモーダルがあれば削除
+    const existingModal = document.getElementById('image-modal')
+    if (existingModal) {
+      existingModal.remove()
+    }
+
+    // モーダル要素作成
+    const modal = document.createElement('div')
+    modal.id = 'image-modal'
+    modal.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      cursor: pointer;
+    `
+
+    // 画像要素作成
+    const img = document.createElement('img')
+    img.src = imageUrl
+    img.alt = eventTitle
+    img.style.cssText = `
+      max-width: 90vw;
+      max-height: 90vh;
+      object-fit: contain;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+      transform: scale(0.8);
+      transition: transform 0.3s ease;
+    `
+
+    // クローズボタン作成
+    const closeButton = document.createElement('button')
+    closeButton.innerHTML = 'X'
+    closeButton.style.cssText = `
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background-color 0.2s ease;
+      font-family: system-ui, -apple-system, sans-serif;
+      color: #333;
+    `
+
+    // イベントリスナー
+    const closeModal = () => {
+      modal.style.opacity = '0'
+      img.style.transform = 'scale(0.8)'
+      setTimeout(() => {
+        modal.remove()
+      }, 300)
+    }
+
+    modal.addEventListener('click', closeModal)
+    closeButton.addEventListener('click', (e) => {
+      e.stopPropagation()
+      closeModal()
+    })
+
+    // キーボードでESCキーで閉じる
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeModal()
+        document.removeEventListener('keydown', handleKeyDown)
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown)
+
+    // DOM追加
+    modal.appendChild(img)
+    modal.appendChild(closeButton)
+    document.body.appendChild(modal)
+
+    // アニメーション開始
+    setTimeout(() => {
+      modal.style.opacity = '1'
+      img.style.transform = 'scale(1)'
+    }, 10)
+  }
+
+  // 4S Event URL構築関数
+  const build4SEventUrl = (event: any): string | null => {
+    if (event.slug) {
+      return `https://4s.link/ja/${event.slug}`
+    }
+    if (event.id) {
+      return `https://4s.link/ja/${event.id}`
+    }
+    return null // URLが構築できない場合
+  }
+
+  // 強化版InfoWindow HTML生成関数
+  const createEnhancedInfoWindow = (event: any): string => {
+    const eventDate = new Date(event.startAt)
+    const eventUrl = build4SEventUrl(event)
+    const isMobileDevice = isMobile()
+    
+    // 画像部分（ある場合のみ表示）
+    const imageSection = event.mainImageUrl ? `
+      <div style="margin-bottom: 12px;">
+        <img 
+          src="${event.mainImageUrl}" 
+          style="
+            width: 100%; 
+            height: 120px; 
+            object-fit: cover; 
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+          " 
+          alt="${event.title}"
+          onclick="
+            this.style.opacity = '0.8';
+            setTimeout(() => this.style.opacity = '1', 200);
+            window.showImageModal('${event.mainImageUrl}', '${event.title.replace(/'/g, "\\'")}');
+          "
+          onmouseover="this.style.opacity = '0.9'"
+          onmouseout="this.style.opacity = '1'"
+        />
+      </div>
+    ` : ''
+    
+    // ボタン部分（URLがある場合のみ表示）
+    const buttonSection = eventUrl ? `
+      <div style="margin-top: 12px; text-align: center;">
+        <button 
+          onclick="window.open('${eventUrl}', '_blank')"
+          style="
+            background-color: #38c37b;
+            color: white;
+            border: none;
+            padding: ${isMobileDevice ? '6px 12px' : '8px 16px'};
+            border-radius: 6px;
+            font-size: ${isMobileDevice ? '11px' : '12px'};
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+          "
+          onmouseover="this.style.backgroundColor='#2ea169'"
+          onmouseout="this.style.backgroundColor='#38c37b'"
+        >
+          4Sで詳細を見る
+        </button>
+      </div>
+    ` : ''
+
+    return `
+      <div style="
+        background: white; 
+        border-radius: 8px; 
+        padding: 15px; 
+        max-width: ${isMobileDevice ? '250px' : '280px'}; 
+        position: relative;
+        margin-bottom: 8px;
+        font-family: system-ui, -apple-system, sans-serif;
+      ">
+        ${imageSection}
+        
+        <h3 style="
+          margin: 0 0 8px 0; 
+          font-size: ${isMobileDevice ? '13px' : '14px'}; 
+          font-weight: 600; 
+          color: #333;
+          line-height: 1.3;
+        ">${event.title}</h3>
+        
+        <p style="
+          margin: 4px 0; 
+          font-size: ${isMobileDevice ? '11px' : '12px'}; 
+          color: #666;
+          display: flex;
+          align-items: center;
+          gap: 4px;
+        ">
+          📅 ${eventDate.toLocaleDateString('ja-JP', {
+            month: 'short',
+            day: 'numeric'
+          })} ${eventDate.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })}
+        </p>
+        
+        ${event.location?.displayText ? `
+          <p style="
+            margin: 4px 0 0 0; 
+            font-size: ${isMobileDevice ? '11px' : '12px'}; 
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          ">
+            📍 ${event.location.displayText}
+          </p>
+        ` : ''}
+        
+        ${buttonSection}
+      </div>
+    `
+  }
 
   // スムーズな地図移動関数（アニメーション付き）
   const smoothPanTo = (targetLat: number, targetLng: number, zoomLevel: number, duration: number = 1000) => {
@@ -133,11 +356,30 @@ export const EventMap: React.FC<EventMapProps> = ({
         })
 
         const infoWindowInstance = new google.maps.InfoWindow({
-          pixelOffset: new google.maps.Size(0, -10) // InfoWindow位置調整
+          pixelOffset: new google.maps.Size(0, -10), // InfoWindow位置調整
+          disableAutoPan: false // 自動パン有効
         })
         
         setMap(mapInstance)
         setInfoWindow(infoWindowInstance)
+        
+        // InfoWindowのデフォルトスタイルを削除するCSS
+        const style = document.createElement('style')
+        style.textContent = `
+          .gm-style-iw-c {
+            box-shadow: none !important;
+            border: 1px solid #e0e0e0 !important;
+            border-radius: 8px !important;
+            padding: 0 !important;
+          }
+          .gm-style-iw-d {
+            overflow: hidden !important;
+          }
+          .gm-style-iw-t::after {
+            display: none !important;
+          }
+        `
+        document.head.appendChild(style)
         
         console.log('✅ Google Maps初期化完了')
         
@@ -196,58 +438,8 @@ export const EventMap: React.FC<EventMapProps> = ({
             // 既存のInfoWindowを閉じる
             infoWindow.close()
             
-            const eventDate = new Date(event.startAt)
-            
-            infoWindow.setContent(`
-              <div style="
-                background: white; 
-                border-radius: 8px; 
-                padding: 15px; 
-                max-width: ${isMobile() ? '250px' : '280px'}; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-                position: relative;
-                margin-bottom: 8px;
-                font-family: system-ui, -apple-system, sans-serif;
-              ">
-                <h3 style="
-                  margin: 0 0 8px 0; 
-                  font-size: ${isMobile() ? '13px' : '14px'}; 
-                  font-weight: 600; 
-                  color: #333;
-                  line-height: 1.3;
-                ">${event.title}</h3>
-                
-                <p style="
-                  margin: 4px 0; 
-                  font-size: ${isMobile() ? '11px' : '12px'}; 
-                  color: #666;
-                  display: flex;
-                  align-items: center;
-                  gap: 4px;
-                ">
-                  📅 ${eventDate.toLocaleDateString('ja-JP', {
-                    month: 'short',
-                    day: 'numeric'
-                  })} ${eventDate.toLocaleTimeString('ja-JP', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
-                
-                ${event.location?.displayText ? `
-                  <p style="
-                    margin: 4px 0 0 0; 
-                    font-size: ${isMobile() ? '11px' : '12px'}; 
-                    color: #666;
-                    display: flex;
-                    align-items: center;
-                    gap: 4px;
-                  ">
-                    📍 ${event.location.displayText}
-                  </p>
-                ` : ''}
-              </div>
-            `)
+            // 強化版InfoWindowを設定
+            infoWindow.setContent(createEnhancedInfoWindow(event))
             infoWindow.open(map, marker)
           }
         })
@@ -279,6 +471,9 @@ export const EventMap: React.FC<EventMapProps> = ({
 
   // 外部からのイベントフォーカス機能を追加
   useEffect(() => {
+    // グローバル関数として画像モーダルを登録
+    window.showImageModal = showImageModal
+    
     // 通常のフォーカス（吹き出しなし）
     window.focusOnEvent = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
@@ -314,58 +509,8 @@ export const EventMap: React.FC<EventMapProps> = ({
         })
         
         if (targetMarker && infoWindow) {
-          const eventDate = new Date(event.startAt)
-          
-          infoWindow.setContent(`
-            <div style="
-              background: white; 
-              border-radius: 8px; 
-              padding: 15px; 
-              max-width: ${isMobile() ? '250px' : '280px'}; 
-              box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-              position: relative;
-              margin-bottom: 8px;
-              font-family: system-ui, -apple-system, sans-serif;
-            ">
-              <h3 style="
-                margin: 0 0 8px 0; 
-                font-size: ${isMobile() ? '13px' : '14px'}; 
-                font-weight: 600; 
-                color: #333;
-                line-height: 1.3;
-              ">${event.title}</h3>
-              
-              <p style="
-                margin: 4px 0; 
-                font-size: ${isMobile() ? '11px' : '12px'}; 
-                color: #666;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-              ">
-                📅 ${eventDate.toLocaleDateString('ja-JP', {
-                  month: 'short',
-                  day: 'numeric'
-                })} ${eventDate.toLocaleTimeString('ja-JP', {
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-              
-              ${event.location?.displayText ? `
-                <p style="
-                  margin: 4px 0 0 0; 
-                  font-size: ${isMobile() ? '11px' : '12px'}; 
-                  color: #666;
-                  display: flex;
-                  align-items: center;
-                  gap: 4px;
-                ">
-                  📍 ${event.location.displayText}
-                </p>
-              ` : ''}
-            </div>
-          `)
+          // 強化版InfoWindowを設定
+          infoWindow.setContent(createEnhancedInfoWindow(event))
           infoWindow.open(map, targetMarker)
         }
                 }, 600) // アニメーション完了後に吹き出し表示

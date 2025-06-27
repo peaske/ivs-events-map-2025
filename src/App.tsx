@@ -200,60 +200,42 @@ function App() {
         >
           IVS Events Map 2025
         </h1>
-        
-        <p style={{
-          margin: '0 0 8px 0',
-          fontSize: '12px',
-          color: '#666',
-          fontWeight: '400'
-        }}>
-          最終更新: {lastUpdated} (file)
-        </p>
-
-        <p style={{
-          margin: '0 0 15px 0',
-          fontSize: '12px',
-          color: '#666',
-          fontWeight: '400'
-        }}>
-          Ⓒ2025 Created by <a href="https://x.com/peaske_en" target="_blank" rel="noopener noreferrer" style={{color: '#666', textDecoration: 'none'}}>@peaske_en</a>
-        </p>
 
         {/* ボタン群 */}
         <div style={{
           display: 'flex',
           justifyContent: 'center',
-          gap: '10px',
-          marginBottom: '15px'
+          gap: window.innerWidth <= 768 ? '6px' : '10px', // モバイル時はギャップ縮小
+          marginBottom: window.innerWidth <= 768 ? '8px' : '15px' // モバイル時はマージン縮小
         }}>
           <button
             onClick={refetch}
             disabled={loading}
             style={{
-              padding: '8px 16px',
+              padding: window.innerWidth <= 768 ? '6px 12px' : '8px 16px', // モバイル時はパディング縮小
               backgroundColor: loading ? '#e0e0e0' : '#f5f5f5',
               color: loading ? '#999' : '#333',
               border: '1px solid #ddd',
               borderRadius: '20px',
               cursor: loading ? 'not-allowed' : 'pointer',
-              fontSize: '12px',
+              fontSize: window.innerWidth <= 768 ? '11px' : '12px', // モバイル時はフォント縮小
               fontWeight: '500',
               transition: 'all 0.2s ease'
             }}
           >
-            {loading ? '最新データ取得中...' : '最新データ取得'}
+            {loading ? '取得中...' : '最新データ'}
           </button>
 
           <button
             onClick={toggleBottomModal}
             style={{
-              padding: '8px 16px',
+              padding: window.innerWidth <= 768 ? '6px 12px' : '8px 16px',
               backgroundColor: showBottomModal ? '#4285f4' : '#f5f5f5',
               color: showBottomModal ? 'white' : '#333',
               border: '1px solid #ddd',
               borderRadius: '20px',
               cursor: 'pointer',
-              fontSize: '12px',
+              fontSize: window.innerWidth <= 768 ? '11px' : '12px',
               fontWeight: '500',
               transition: 'all 0.2s ease'
             }}
@@ -264,30 +246,47 @@ function App() {
           <button
             onClick={getCurrentLocation}
             style={{
-              padding: '8px 16px',
+              padding: window.innerWidth <= 768 ? '6px 12px' : '8px 16px',
               backgroundColor: userLocation ? '#34a853' : '#f5f5f5',
               color: userLocation ? 'white' : '#333',
               border: '1px solid #ddd',
               borderRadius: '20px',
               cursor: 'pointer',
-              fontSize: '12px',
+              fontSize: window.innerWidth <= 768 ? '11px' : '12px',
               fontWeight: '500',
               transition: 'all 0.2s ease'
             }}
             title={userLocation ? '現在地に移動' : '位置情報を取得'}
           >
-            📍現在地 {userLocation && '✓'}
+            {window.innerWidth <= 768 ? '📍現在地' : '📍現在地'} {userLocation && '✓'}
           </button>
         </div>
 
         {/* ステータス表示 */}
         <div style={{
-          fontSize: '12px',
+          fontSize: window.innerWidth <= 768 ? '11px' : '12px', // モバイル時はフォント縮小
+          color: '#666',
+          fontWeight: '400',
+          marginBottom: window.innerWidth <= 768 ? '5px' : '8px' // モバイル時はマージン縮小
+        }}>
+          <span style={{ color: 'rgb(52, 168, 83)' }}>●</span> {eventsWithLocation.length}個のイベント表示中 (最終更新: {now.toLocaleDateString('ja-JP', {
+            year: '2-digit',
+            month: '2-digit',
+            day: '2-digit'
+          })} {now.toLocaleTimeString('ja-JP', {
+            hour: '2-digit',
+            minute: '2-digit'
+          })})
+        </div>
+
+        <p style={{
+          margin: '0 0 ' + (window.innerWidth <= 768 ? '5px' : '15px') + ' 0', // モバイル時はマージン縮小
+          fontSize: window.innerWidth <= 768 ? '10px' : '12px', // モバイル時はフォント縮小
           color: '#666',
           fontWeight: '400'
         }}>
-          <span style={{ color: 'rgb(52, 168, 83)' }}>●</span> {eventsWithLocation.length}個のイベント表示中
-        </div>
+          Ⓒ2025 Created by <a href="https://x.com/peaske_en" target="_blank" rel="noopener noreferrer" style={{color: '#666', textDecoration: 'none'}}>@peaske_en</a>
+        </p>
 
         {/* エラー表示 */}
         {error && (
@@ -308,7 +307,7 @@ function App() {
       {/* 地図エリア */}
       <div className="map-wrapper" style={{ 
         position: 'absolute',
-        top: 180,
+        top: window.innerWidth <= 768 ? 105 : 180, // モバイル時の隙間を埋める（120→105）
         left: 0,
         right: 0,
         bottom: 0,

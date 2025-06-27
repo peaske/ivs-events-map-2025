@@ -84,12 +84,26 @@ html, body {
   top: 180px !important;
 }
 
+/* モバイル時の地図位置調整 */
+@media (max-width: 768px) {
+  .map-wrapper {
+    top: 105px !important; /* モバイル時の隙間を完全に埋める */
+  }
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   /* モバイル対応ヘッダー */
   .app-title {
     font-size: 14px !important;
     font-weight: bold;
+    padding: 5px 0 !important; /* モバイル時はパディング縮小 */
+    margin: 0 !important;
+  }
+  
+  /* モバイル時のヘッダー全体 */
+  .header-overlay {
+    padding: 10px 15px !important; /* 上下パディング大幅縮小 */
   }
   
   /* モバイル時は縦配置に変更 */
