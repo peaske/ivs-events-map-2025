@@ -47,8 +47,51 @@ html, body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
 }
 
+/* モバイル対応ヘッダースタイル */
+.app-title {
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  margin: 0;
+  padding: 10px 0;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333 !important; /* 文字色を濃いグレーに設定 */
+}
+
+.app-title:hover {
+  opacity: 0.8;
+}
+
+/* ヘッダーエリア強制表示 */
+.header-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1) !important;
+  padding: 20px !important;
+  text-align: center !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+}
+
+/* 地図エリアをヘッダー分下にずらす */
+.map-wrapper {
+  padding-top: 0 !important;
+  top: 180px !important;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
+  /* モバイル対応ヘッダー */
+  .app-title {
+    font-size: 14px !important;
+    font-weight: bold;
+  }
+  
   /* モバイル時は縦配置に変更 */
   .app-container {
     flex-direction: column !important;

@@ -32,6 +32,49 @@ export const EventMap: React.FC<EventMapProps> = ({
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null)
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null)
 
+  // スムーズな地図移動関数（アニメーション付き）
+  const smoothPanTo = (targetLat: number, targetLng: number, zoomLevel: number, duration: number = 1000) => {
+    if (!map) return
+
+    const startPos = map.getCenter()!
+    const startZoom = map.getZoom()!
+    const startTime = Date.now()
+
+    // イージング関数（ふわっとした動き）
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+    }
+
+    const animate = () => {
+      const elapsed = Date.now() - startTime
+      const progress = Math.min(elapsed / duration, 1)
+      const easedProgress = easeInOutCubic(progress)
+
+      // 位置の補間
+      const currentLat = startPos.lat() + (targetLat - startPos.lat()) * easedProgress
+      const currentLng = startPos.lng() + (targetLng - startPos.lng()) * easedProgress
+      const currentZoom = startZoom + (zoomLevel - startZoom) * easedProgress
+
+      map.setCenter({ lat: currentLat, lng: currentLng })
+      map.setZoom(currentZoom)
+
+      if (progress < 1) {
+        requestAnimationFrame(animate)
+      }
+    }
+
+    requestAnimationFrame(animate)
+  }
+
+  // モバイル判定とオフセット計算
+  const isMobile = () => window.innerWidth <= 768
+  const getMapOffset = () => {
+    if (isMobile()) {
+      return { lat: 0.002, lng: 0 } // モバイル時はピンを少し下にずらす
+    }
+    return { lat: 0, lng: 0 }
+  }
+
   // Google Maps初期化
   useEffect(() => {
     const initMap = async () => {
@@ -89,7 +132,9 @@ export const EventMap: React.FC<EventMapProps> = ({
           ]
         })
 
-        const infoWindowInstance = new google.maps.InfoWindow()
+        const infoWindowInstance = new google.maps.InfoWindow({
+          pixelOffset: new google.maps.Size(0, -10) // InfoWindow位置調整
+        })
         
         setMap(mapInstance)
         setInfoWindow(infoWindowInstance)
@@ -136,12 +181,15 @@ export const EventMap: React.FC<EventMapProps> = ({
 
         // マーカークリックイベント
         marker.addListener('click', () => {
-          // 地図をそのピンの近くにズーム（添付-1レベル）
-          map.panTo({
-            lat: event.location!.geo!.lat!,
-            lng: event.location!.geo!.lng!
-          })
-          map.setZoom(18) // より詳細なズーム（添付-1レベル）
+          const offset = getMapOffset()
+          const targetLat = event.location!.geo!.lat! + offset.lat
+          const targetLng = event.location!.geo!.lng! + offset.lng
+          
+          // 徒歩圏内レベルのズーム調整
+          const zoomLevel = isMobile() ? 16 : 19
+          
+          // ふわっとアニメーション移動
+          smoothPanTo(targetLat, targetLng, zoomLevel, 800)
           
           // カスタムInfoWindow表示
           if (infoWindow) {
@@ -155,7 +203,7 @@ export const EventMap: React.FC<EventMapProps> = ({
                 background: white; 
                 border-radius: 8px; 
                 padding: 15px; 
-                max-width: 280px; 
+                max-width: ${isMobile() ? '250px' : '280px'}; 
                 box-shadow: 0 4px 12px rgba(0,0,0,0.15);
                 position: relative;
                 margin-bottom: 8px;
@@ -163,7 +211,7 @@ export const EventMap: React.FC<EventMapProps> = ({
               ">
                 <h3 style="
                   margin: 0 0 8px 0; 
-                  font-size: 14px; 
+                  font-size: ${isMobile() ? '13px' : '14px'}; 
                   font-weight: 600; 
                   color: #333;
                   line-height: 1.3;
@@ -171,7 +219,7 @@ export const EventMap: React.FC<EventMapProps> = ({
                 
                 <p style="
                   margin: 4px 0; 
-                  font-size: 12px; 
+                  font-size: ${isMobile() ? '11px' : '12px'}; 
                   color: #666;
                   display: flex;
                   align-items: center;
@@ -189,7 +237,7 @@ export const EventMap: React.FC<EventMapProps> = ({
                 ${event.location?.displayText ? `
                   <p style="
                     margin: 4px 0 0 0; 
-                    font-size: 12px; 
+                    font-size: ${isMobile() ? '11px' : '12px'}; 
                     color: #666;
                     display: flex;
                     align-items: center;
@@ -235,23 +283,26 @@ export const EventMap: React.FC<EventMapProps> = ({
     window.focusOnEvent = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
       
-      map.panTo({
-        lat: event.location.geo.lat,
-        lng: event.location.geo.lng
-      })
-      map.setZoom(14)
+      const offset = getMapOffset()
+      const targetLat = event.location.geo.lat + offset.lat
+      const targetLng = event.location.geo.lng + offset.lng
+      const zoomLevel = isMobile() ? 15 : 17
+      
+      // ふわっとアニメーション移動
+      smoothPanTo(targetLat, targetLng, zoomLevel, 600)
     }
     
     // フォーカス＋吹き出し表示
     window.focusOnEventWithPopup = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
       
-      // 地図を移動
-      map.panTo({
-        lat: event.location.geo.lat,
-        lng: event.location.geo.lng
-      })
-      map.setZoom(18) // 詳細ズーム
+      const offset = getMapOffset()
+      const targetLat = event.location.geo.lat + offset.lat
+      const targetLng = event.location.geo.lng + offset.lng
+      const zoomLevel = isMobile() ? 16 : 19 // 徒歩圏内ズーム
+      
+      // ふわっとアニメーション移動
+      smoothPanTo(targetLat, targetLng, zoomLevel, 800)
       
       // 該当するマーカーを見つけて吹き出しを表示
       setTimeout(() => {
@@ -270,7 +321,7 @@ export const EventMap: React.FC<EventMapProps> = ({
               background: white; 
               border-radius: 8px; 
               padding: 15px; 
-              max-width: 280px; 
+              max-width: ${isMobile() ? '250px' : '280px'}; 
               box-shadow: 0 4px 12px rgba(0,0,0,0.15);
               position: relative;
               margin-bottom: 8px;
@@ -278,7 +329,7 @@ export const EventMap: React.FC<EventMapProps> = ({
             ">
               <h3 style="
                 margin: 0 0 8px 0; 
-                font-size: 14px; 
+                font-size: ${isMobile() ? '13px' : '14px'}; 
                 font-weight: 600; 
                 color: #333;
                 line-height: 1.3;
@@ -286,7 +337,7 @@ export const EventMap: React.FC<EventMapProps> = ({
               
               <p style="
                 margin: 4px 0; 
-                font-size: 12px; 
+                font-size: ${isMobile() ? '11px' : '12px'}; 
                 color: #666;
                 display: flex;
                 align-items: center;
@@ -304,7 +355,7 @@ export const EventMap: React.FC<EventMapProps> = ({
               ${event.location?.displayText ? `
                 <p style="
                   margin: 4px 0 0 0; 
-                  font-size: 12px; 
+                  font-size: ${isMobile() ? '11px' : '12px'}; 
                   color: #666;
                   display: flex;
                   align-items: center;
@@ -317,15 +368,19 @@ export const EventMap: React.FC<EventMapProps> = ({
           `)
           infoWindow.open(map, targetMarker)
         }
-      }, 500) // 地図移動完了後に吹き出し表示
+                }, 600) // アニメーション完了後に吹き出し表示
     }
     
     // 現在地フォーカス
     window.focusOnUserLocation = (location: {lat: number, lng: number}) => {
       if (!map) return
       
-      map.panTo(location)
-      map.setZoom(15)
+      const offset = getMapOffset()
+      const targetLat = location.lat + offset.lat
+      const targetLng = location.lng + offset.lng
+      
+      // ふわっとアニメーション移動
+      smoothPanTo(targetLat, targetLng, 15, 700)
     }
   }, [map, markers, infoWindow])
 
@@ -399,11 +454,12 @@ export const EventMap: React.FC<EventMapProps> = ({
   useEffect(() => {
     if (!map || !selectedEvent || !selectedEvent.location?.geo?.lat || !selectedEvent.location?.geo?.lng) return
 
+    const offset = getMapOffset()
     map.setCenter({
-      lat: selectedEvent.location.geo.lat,
-      lng: selectedEvent.location.geo.lng
+      lat: selectedEvent.location.geo.lat + offset.lat,
+      lng: selectedEvent.location.geo.lng + offset.lng
     })
-    map.setZoom(14)
+    map.setZoom(isMobile() ? 15 : 17)
 
   }, [map, selectedEvent])
 

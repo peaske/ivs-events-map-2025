@@ -181,25 +181,23 @@ function App() {
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       {/* ヘッダーオーバーレイ */}
-      <div style={{
-        position: 'absolute',
+      <div className="header-overlay" style={{
+        position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         backgroundColor: 'rgba(255, 255, 255, 0.95)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(0, 0, 0, 0.1)',
-        zIndex: 1000,
+        zIndex: 9999,
         padding: '20px',
-        textAlign: 'center'
+        textAlign: 'center',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
       }}>
-        <h1 style={{
-          margin: '0 0 8px 0',
-          fontSize: '40px',
-          fontWeight: '300',
-          color: '#333',
-          letterSpacing: '1px'
-        }}>
+        <h1 
+          className="app-title"
+          onClick={() => window.location.href = 'https://peaske.github.io/ivs-events-map-2025/'}
+        >
           IVS Events Map 2025
         </h1>
         
@@ -308,9 +306,9 @@ function App() {
       </div>
 
       {/* 地図エリア */}
-      <div style={{ 
+      <div className="map-wrapper" style={{ 
         position: 'absolute',
-        top: 0,
+        top: 180,
         left: 0,
         right: 0,
         bottom: 0,
@@ -327,7 +325,7 @@ function App() {
       {/* 底部エリア（イベント一覧テキストまで見える） */}
       <div style={{
         position: 'fixed',
-        bottom: showBottomModal ? 0 : '-36vh', // 40vh - 4vh = 36vh隠す（#113a24のbottomを画面bottomに合わせる）
+        bottom: showBottomModal ? 0 : '-32.2vh', // 40vh - 7.8vh = 32.2vh隠す（9.5%表示）
         left: 0,
         right: 0,
         height: '40vh',
