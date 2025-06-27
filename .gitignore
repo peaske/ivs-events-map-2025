@@ -89,3 +89,7 @@ jspm_packages/
 # Environment variables
 .env.local
 .env
+
+# Local development files
+CONTEXT.md
+_Progress.txt
