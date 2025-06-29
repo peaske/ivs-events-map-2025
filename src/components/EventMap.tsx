@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Loader } from '@googlemaps/js-api-loader'
 import type { Event } from '../hooks/useEvents'
+import { analytics } from '../utils/analytics';
 
 // グローバル型定義を追加
 declare global {
