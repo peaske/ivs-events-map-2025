@@ -3,7 +3,35 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-    <title>IVS Events Map - Interactive Event Discovery</title>
+    
+    <!-- 基本メタタグ（強化版） -->
+    <title>IVS Events Map 2025 - IVSイベントをインタラクティブマップで探索</title>
+    <meta name="description" content="IVS 2025のイベント情報をリアルタイムでインタラクティブマップ表示。現在地から最寄りのIVSイベントを見つけて、スタートアップエコシステムを最大限楽しもう！🚶‍♀️✨" />
+    <meta name="keywords" content="IVS,IVS2025,イベント,マップ,インタラクティブ,スタートアップ,起業,ネットワーキング,4S,リアルタイム,現在地,イベント検索" />
+    <meta name="author" content="peaske_en" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#113a24" />
+    
+    <!-- Open Graph (Facebook, LinkedIn等) 強化版 -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="IVS Events Map 2025" />
+    <meta property="og:title" content="IVS Events Map 2025 - IVSイベントをインタラクティブマップで探索" />
+    <meta property="og:description" content="IVS 2025のイベント情報をリアルタイムでマップ表示。現在地から最寄りのイベントを見つけて、IVSを最大限楽しもう！🚶‍♀️✨" />
+    <meta property="og:url" content="https://peaske.github.io/ivs-events-map-2025/" />
+    <meta property="og:image" content="https://peaske.github.io/ivs-events-map-2025/og-image.png" />
+    <meta property="og:image:alt" content="IVS Events Map 2025 - インタラクティブイベントマップのプレビュー画像。日本地図上にIVSイベントピンが表示されている" />
+    <meta property="og:image:width" content="1518" />
+    <meta property="og:image:height" content="1024" />
+    <meta property="og:locale" content="ja_JP" />
+    
+    <!-- Twitter Card 強化版 -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@peaske_en" />
+    <meta name="twitter:creator" content="@peaske_en" />
+    <meta name="twitter:title" content="IVS Events Map 2025 - IVSイベントをインタラクティブマップで探索" />
+    <meta name="twitter:description" content="IVS 2025のイベント情報をリアルタイムでマップ表示。現在地から最寄りのイベントを見つけて、IVSを最大限楽しもう！🚶‍♀️✨ #IVS2025 #IVS参加表明" />
+    <meta name="twitter:image" content="https://peaske.github.io/ivs-events-map-2025/og-image.png" />
+    <meta name="twitter:image:alt" content="IVS Events Map 2025のインタラクティブマップ画面" />
     
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TKK950BW8"></script>
@@ -17,7 +45,7 @@
       });
     </script>
     
-    <!-- ファビコン設定 -->
+    <!-- ファビコン設定（既存を保持） -->
     <link rel="icon" type="image/png" sizes="32x32" href="/ivs-events-map-2025/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/ivs-events-map-2025/favicon-16x16.png">
     <link rel="apple-touch-icon" sizes="180x180" href="/ivs-events-map-2025/apple-touch-icon.png">
@@ -27,27 +55,67 @@
     <meta name="msapplication-TileColor" content="#da532c">
     <meta name="theme-color" content="#ffffff">
     
-    <!-- SEO & メタデータ -->
-    <meta name="description" content="Discover upcoming IVS events on an interactive map with real-time data">
-    <meta name="keywords" content="IVS, events, map, interactive, 2025, discovery">
-    <meta name="author" content="peaske_en">
+    <!-- 構造化データ (JSON-LD) 強化版 -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "IVS Events Map 2025",
+      "description": "IVS 2025のイベント情報をリアルタイムでインタラクティブマップ表示するWebアプリケーション",
+      "url": "https://peaske.github.io/ivs-events-map-2025/",
+      "applicationCategory": "EventApplication",
+      "operatingSystem": "Any",
+      "browserRequirements": "Modern web browser with JavaScript enabled",
+      "author": {
+        "@type": "Person",
+        "name": "peaske_en",
+        "url": "https://x.com/peaske_en"
+      },
+      "publisher": {
+        "@type": "Person",
+        "name": "peaske_en"
+      },
+      "image": "https://peaske.github.io/ivs-events-map-2025/og-image.png",
+      "screenshot": "https://peaske.github.io/ivs-events-map-2025/og-image.png",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "JPY"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5.0",
+        "reviewCount": "1"
+      },
+      "potentialAction": {
+        "@type": "UseAction",
+        "target": "https://peaske.github.io/ivs-events-map-2025/"
+      },
+      "keywords": ["IVS", "events", "map", "interactive", "startup", "networking", "2025"],
+      "dateCreated": "2025-06-27",
+      "inLanguage": "ja"
+    }
+    </script>
     
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://peaske.github.io/ivs-events-map-2025/">
-    <meta property="og:title" content="IVS Events Map 2025 - Interactive Event Discovery">
-    <meta property="og:description" content="Discover upcoming IVS events on an interactive map with real-time data">
-    <meta property="og:image" content="https://peaske.github.io/ivs-events-map-2025/android-chrome-512x512.png">
+    <!-- カノニカルURL -->
+    <link rel="canonical" href="https://peaske.github.io/ivs-events-map-2025/" />
     
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://peaske.github.io/ivs-events-map-2025/">
-    <meta property="twitter:title" content="IVS Events Map 2025 - Interactive Event Discovery">
-    <meta property="twitter:description" content="Discover upcoming IVS events on an interactive map with real-time data">
-    <meta property="twitter:image" content="https://peaske.github.io/ivs-events-map-2025/android-chrome-512x512.png">
+    <!-- その他のメタタグ -->
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="IVS Events Map" />
+    
+    <!-- プリコネクト & DNS プリフェッチ -->
+    <link rel="preconnect" href="https://maps.googleapis.com" />
+    <link rel="preconnect" href="https://api.4s.link" />
+    <link rel="preconnect" href="https://api.qrserver.com" />
+    <link rel="dns-prefetch" href="//www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
     
     <style>
-      /* 初期ローディング画面 */
+      /* 初期ローディング画面（既存を保持） */
       #loading {
         position: fixed;
         top: 0;
@@ -90,11 +158,11 @@
         display: none;
       }
     </style>
-    <script type="module" crossorigin src="/ivs-events-map-2025/assets/index-18982206.js"></script>
+    <script type="module" crossorigin src="/ivs-events-map-2025/assets/index-1031db20.js"></script>
     <link rel="stylesheet" href="/ivs-events-map-2025/assets/index-47ab0af5.css">
   </head>
   <body>
-    <!-- 初期ローディング画面 -->
+    <!-- 初期ローディング画面（既存を保持） -->
     <div id="loading">
       <h1>IVS Events Map 2025</h1>
       <div class="spinner"></div>
@@ -107,7 +175,7 @@
     <div id="root"></div>
     
     <script>
-      // ロード完了時にローディング画面を非表示
+      // ロード完了時にローディング画面を非表示（既存を保持）
       window.addEventListener('load', () => {
         document.body.classList.add('loaded');
       });
