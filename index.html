@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>IVS Events Map - Interactive Event Discovery</title>
+    
     <!-- Google Analytics 4 -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1TKK950BW8"></script>
     <script>
@@ -15,7 +16,36 @@
         page_location: window.location.href
       });
     </script>
+    
+    <!-- ファビコン設定 -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/android-chrome-512x512.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <meta name="msapplication-TileColor" content="#da532c">
+    <meta name="theme-color" content="#ffffff">
+    
+    <!-- SEO & メタデータ -->
     <meta name="description" content="Discover upcoming IVS events on an interactive map with real-time data">
+    <meta name="keywords" content="IVS, events, map, interactive, 2025, discovery">
+    <meta name="author" content="peaske_en">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://peaske.github.io/ivs-events-map-2025/">
+    <meta property="og:title" content="IVS Events Map 2025 - Interactive Event Discovery">
+    <meta property="og:description" content="Discover upcoming IVS events on an interactive map with real-time data">
+    <meta property="og:image" content="https://peaske.github.io/ivs-events-map-2025/android-chrome-512x512.png">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://peaske.github.io/ivs-events-map-2025/">
+    <meta property="twitter:title" content="IVS Events Map 2025 - Interactive Event Discovery">
+    <meta property="twitter:description" content="Discover upcoming IVS events on an interactive map with real-time data">
+    <meta property="twitter:image" content="https://peaske.github.io/ivs-events-map-2025/android-chrome-512x512.png">
+    
     <style>
       /* 初期ローディング画面 */
       #loading {
@@ -45,7 +75,7 @@
         width: 40px;
         height: 40px;
         border: 3px solid #f3f3f3;
-        border-top: 3px solid #4285f4;
+        border-top: 3px solid #da532c;
         border-radius: 50%;
         animation: spin 1s linear infinite;
       }
