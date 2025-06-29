@@ -10,6 +10,7 @@ declare global {
     focusOnEventWithPopup?: (event: any) => void;
     focusOnUserLocation?: (location: {lat: number, lng: number}) => void;
     showImageModal?: (imageUrl: string, eventTitle: string) => void;
+    showAllEventsOnMap?: () => void;
   }
 }
 
@@ -22,6 +23,61 @@ interface EventMapProps {
 
 const GOOGLE_MAPS_API_KEY = 'AIzaSyDAPia8Rfqck7my2z3Wj1NkBqLornWFutk'
 
+// 画像キャッシュとプリロード管理
+class ImageCache {
+  private cache = new Map<string, HTMLImageElement>()
+  private loading = new Set<string>()
+
+  async preloadImage(url: string): Promise<HTMLImageElement> {
+    if (this.cache.has(url)) {
+      return this.cache.get(url)!
+    }
+
+    if (this.loading.has(url)) {
+      return new Promise((resolve) => {
+        const checkLoading = () => {
+          if (this.cache.has(url)) {
+            resolve(this.cache.get(url)!)
+          } else {
+            setTimeout(checkLoading, 50)
+          }
+        }
+        checkLoading()
+      })
+    }
+
+    this.loading.add(url)
+
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      
+      img.onload = () => {
+        this.cache.set(url, img)
+        this.loading.delete(url)
+        resolve(img)
+      }
+      
+      img.onerror = () => {
+        this.loading.delete(url)
+        reject(new Error(`Failed to load image: ${url}`))
+      }
+      
+      img.src = url
+    })
+  }
+
+  getCachedImage(url: string): HTMLImageElement | null {
+    return this.cache.get(url) || null
+  }
+
+  isLoading(url: string): boolean {
+    return this.loading.has(url)
+  }
+}
+
+const imageCache = new ImageCache()
+
 export const EventMap: React.FC<EventMapProps> = ({ 
   events, 
   selectedEvent, 
@@ -33,16 +89,119 @@ export const EventMap: React.FC<EventMapProps> = ({
   const [markers, setMarkers] = useState<google.maps.Marker[]>([])
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null)
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null)
+  const [isInitialLoad, setIsInitialLoad] = useState(true)
+
+  // イベント画像のプリロード
+  useEffect(() => {
+    const preloadImages = async () => {
+      const imageUrls = events
+        .filter(event => event.mainImageUrl)
+        .map(event => event.mainImageUrl!)
+      
+      const chunks = []
+      for (let i = 0; i < imageUrls.length; i += 5) {
+        chunks.push(imageUrls.slice(i, i + 5))
+      }
+
+      for (const chunk of chunks) {
+        await Promise.allSettled(
+          chunk.map(url => imageCache.preloadImage(url))
+        )
+      }
+    }
+
+    if (events.length > 0) {
+      preloadImages()
+    }
+  }, [events])
+
+  // 最適化された画像表示コンポーネント
+  const createOptimizedImage = (imageUrl: string, eventTitle: string): string => {
+    const cachedImage = imageCache.getCachedImage(imageUrl)
+    const isLoading = imageCache.isLoading(imageUrl)
+    
+    if (cachedImage) {
+      return `
+        <img 
+          src="${imageUrl}" 
+          style="
+            width: 100%; 
+            height: 120px; 
+            object-fit: cover; 
+            border-radius: 6px;
+            border: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: opacity 0.2s ease;
+            background-color: #f8f9fa;
+          " 
+          alt="${eventTitle}"
+          onclick="
+            this.style.opacity = '0.8';
+            setTimeout(() => this.style.opacity = '1', 200);
+            window.showImageModal('${imageUrl}', '${eventTitle.replace(/'/g, "\\'")}');
+          "
+          onmouseover="this.style.opacity = '0.9'"
+          onmouseout="this.style.opacity = '1'"
+        />
+      `
+    } else if (isLoading) {
+      return `
+        <div style="
+          width: 100%; 
+          height: 120px; 
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200% 100%;
+          animation: shimmer 1.5s infinite;
+          border-radius: 6px;
+          border: 1px solid #f0f0f0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #999;
+          font-size: 12px;
+        ">
+          📸 読み込み中...
+        </div>
+        <style>
+          @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+          }
+        </style>
+      `
+    } else {
+      return `
+        <div style="
+          width: 100%; 
+          height: 120px; 
+          background-color: #f8f9fa;
+          border: 2px dashed #ddd;
+          border-radius: 6px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #999;
+          font-size: 12px;
+          cursor: pointer;
+        " onclick="
+          this.innerHTML = '<div style=\\'font-size: 10px;\\'>📸 読み込み中...</div>';
+          imageCache.preloadImage('${imageUrl}').then(() => {
+            location.reload();
+          });
+        ">
+          📸 画像を読み込む
+        </div>
+      `
+    }
+  }
 
   // 画像拡大モーダル表示関数
   const showImageModal = (imageUrl: string, eventTitle: string) => {
-    // 既存のモーダルがあれば削除
     const existingModal = document.getElementById('image-modal')
     if (existingModal) {
       existingModal.remove()
     }
 
-    // モーダル要素作成
     const modal = document.createElement('div')
     modal.id = 'image-modal'
     modal.style.cssText = `
@@ -61,9 +220,16 @@ export const EventMap: React.FC<EventMapProps> = ({
       cursor: pointer;
     `
 
-    // 画像要素作成
+    const loadingDiv = document.createElement('div')
+    loadingDiv.style.cssText = `
+      color: white;
+      font-size: 18px;
+      text-align: center;
+    `
+    loadingDiv.innerHTML = '📸 画像を読み込み中...'
+    modal.appendChild(loadingDiv)
+
     const img = document.createElement('img')
-    img.src = imageUrl
     img.alt = eventTitle
     img.style.cssText = `
       max-width: 90vw;
@@ -73,9 +239,24 @@ export const EventMap: React.FC<EventMapProps> = ({
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
       transform: scale(0.8);
       transition: transform 0.3s ease;
+      display: none;
     `
 
-    // クローズボタン作成
+    const cachedImage = imageCache.getCachedImage(imageUrl)
+    if (cachedImage) {
+      img.src = imageUrl
+      loadingDiv.style.display = 'none'
+      img.style.display = 'block'
+    } else {
+      imageCache.preloadImage(imageUrl).then(() => {
+        img.src = imageUrl
+        loadingDiv.style.display = 'none'
+        img.style.display = 'block'
+      }).catch(() => {
+        loadingDiv.innerHTML = '❌ 画像の読み込みに失敗しました'
+      })
+    }
+
     const closeButton = document.createElement('button')
     closeButton.innerHTML = 'X'
     closeButton.style.cssText = `
@@ -98,7 +279,6 @@ export const EventMap: React.FC<EventMapProps> = ({
       color: #333;
     `
 
-    // イベントリスナー
     const closeModal = () => {
       modal.style.opacity = '0'
       img.style.transform = 'scale(0.8)'
@@ -113,7 +293,6 @@ export const EventMap: React.FC<EventMapProps> = ({
       closeModal()
     })
 
-    // キーボードでESCキーで閉じる
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         closeModal()
@@ -122,12 +301,10 @@ export const EventMap: React.FC<EventMapProps> = ({
     }
     document.addEventListener('keydown', handleKeyDown)
 
-    // DOM追加
     modal.appendChild(img)
     modal.appendChild(closeButton)
     document.body.appendChild(modal)
 
-    // アニメーション開始
     setTimeout(() => {
       modal.style.opacity = '1'
       img.style.transform = 'scale(1)'
@@ -142,7 +319,7 @@ export const EventMap: React.FC<EventMapProps> = ({
     if (event.id) {
       return `https://4s.link/ja/${event.id}`
     }
-    return null // URLが構築できない場合
+    return null
   }
 
   // 強化版InfoWindow HTML生成関数
@@ -151,33 +328,12 @@ export const EventMap: React.FC<EventMapProps> = ({
     const eventUrl = build4SEventUrl(event)
     const isMobileDevice = isMobile()
     
-    // 画像部分（ある場合のみ表示）
     const imageSection = event.mainImageUrl ? `
       <div style="margin-bottom: 12px;">
-        <img 
-          src="${event.mainImageUrl}" 
-          style="
-            width: 100%; 
-            height: 120px; 
-            object-fit: cover; 
-            border-radius: 6px;
-            border: 1px solid #f0f0f0;
-            cursor: pointer;
-            transition: opacity 0.2s ease;
-          " 
-          alt="${event.title}"
-          onclick="
-            this.style.opacity = '0.8';
-            setTimeout(() => this.style.opacity = '1', 200);
-            window.showImageModal('${event.mainImageUrl}', '${event.title.replace(/'/g, "\\'")}');
-          "
-          onmouseover="this.style.opacity = '0.9'"
-          onmouseout="this.style.opacity = '1'"
-        />
+        ${createOptimizedImage(event.mainImageUrl, event.title)}
       </div>
     ` : ''
     
-    // ボタン部分（URLがある場合のみ表示）
     const buttonSection = eventUrl ? `
       <div style="margin-top: 12px; text-align: center;">
         <button 
@@ -256,7 +412,7 @@ export const EventMap: React.FC<EventMapProps> = ({
     `
   }
 
-  // スムーズな地図移動関数（アニメーション付き）
+  // スムーズな地図移動関数
   const smoothPanTo = (targetLat: number, targetLng: number, zoomLevel: number, duration: number = 1000) => {
     if (!map) return
 
@@ -264,7 +420,6 @@ export const EventMap: React.FC<EventMapProps> = ({
     const startZoom = map.getZoom()!
     const startTime = Date.now()
 
-    // イージング関数（ふわっとした動き）
     const easeInOutCubic = (t: number): number => {
       return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
     }
@@ -274,7 +429,6 @@ export const EventMap: React.FC<EventMapProps> = ({
       const progress = Math.min(elapsed / duration, 1)
       const easedProgress = easeInOutCubic(progress)
 
-      // 位置の補間
       const currentLat = startPos.lat() + (targetLat - startPos.lat()) * easedProgress
       const currentLng = startPos.lng() + (targetLng - startPos.lng()) * easedProgress
       const currentZoom = startZoom + (zoomLevel - startZoom) * easedProgress
@@ -294,7 +448,7 @@ export const EventMap: React.FC<EventMapProps> = ({
   const isMobile = () => window.innerWidth <= 768
   const getMapOffset = () => {
     if (isMobile()) {
-      return { lat: 0.002, lng: 0 } // モバイル時はピンを少し下にずらす
+      return { lat: 0.002, lng: 0 }
     }
     return { lat: 0, lng: 0 }
   }
@@ -313,9 +467,8 @@ export const EventMap: React.FC<EventMapProps> = ({
 
         const google = await loader.load()
         
-        // 日本中心の地図（参考画像と同じスタイル）
         const mapInstance = new google.maps.Map(mapRef.current, {
-          center: { lat: 35.6762, lng: 139.6503 }, // 東京
+          center: { lat: 35.6762, lng: 139.6503 },
           zoom: 6,
           mapTypeControl: true,
           mapTypeControlOptions: {
@@ -337,7 +490,6 @@ export const EventMap: React.FC<EventMapProps> = ({
             position: google.maps.ControlPosition.TOP_RIGHT
           },
           styles: [
-            // Google Maps標準スタイル（参考画像と同じ）
             {
               featureType: 'water',
               elementType: 'geometry.fill',
@@ -357,14 +509,13 @@ export const EventMap: React.FC<EventMapProps> = ({
         })
 
         const infoWindowInstance = new google.maps.InfoWindow({
-          pixelOffset: new google.maps.Size(0, -10), // InfoWindow位置調整
-          disableAutoPan: false // 自動パン有効
+          pixelOffset: new google.maps.Size(0, -10),
+          disableAutoPan: false
         })
         
         setMap(mapInstance)
         setInfoWindow(infoWindowInstance)
         
-        // InfoWindowのデフォルトスタイルを削除するCSS
         const style = document.createElement('style')
         style.textContent = `
           .gm-style-iw-c {
@@ -396,11 +547,9 @@ export const EventMap: React.FC<EventMapProps> = ({
   useEffect(() => {
     if (!map || !window.google) return
 
-    // 既存マーカーをクリア
     markers.forEach(marker => marker.setMap(null))
     setMarkers([])
 
-    // 座標があるイベントのみマーカー作成
     const newMarkers = events
       .filter(event => event.location?.geo?.lat && event.location?.geo?.lng)
       .map(event => {
@@ -422,24 +571,17 @@ export const EventMap: React.FC<EventMapProps> = ({
           }
         })
 
-        // マーカークリックイベント
         marker.addListener('click', () => {
           const offset = getMapOffset()
           const targetLat = event.location!.geo!.lat! + offset.lat
           const targetLng = event.location!.geo!.lng! + offset.lng
           
-          // 徒歩圏内レベルのズーム調整
           const zoomLevel = isMobile() ? 16 : 19
           
-          // ふわっとアニメーション移動
           smoothPanTo(targetLat, targetLng, zoomLevel, 800)
           
-          // カスタムInfoWindow表示
           if (infoWindow) {
-            // 既存のInfoWindowを閉じる
             infoWindow.close()
-            
-            // 強化版InfoWindowを設定
             infoWindow.setContent(createEnhancedInfoWindow(event))
             infoWindow.open(map, marker)
           }
@@ -452,30 +594,42 @@ export const EventMap: React.FC<EventMapProps> = ({
     
     console.log(`📍 ${newMarkers.length}個のマーカーを配置`)
 
-    // 地図の範囲をマーカーに合わせて調整
-    if (newMarkers.length > 0) {
+    if (newMarkers.length > 0 && isInitialLoad) {
       const bounds = new google.maps.LatLngBounds()
       newMarkers.forEach(marker => {
         bounds.extend(marker.getPosition()!)
       })
       map.fitBounds(bounds)
       
-      // ズームが近すぎる場合は調整
       google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
         if (map.getZoom()! > 15) {
           map.setZoom(15)
         }
       })
+      
+      setIsInitialLoad(false)
     }
 
   }, [map, events, onEventSelect, infoWindow])
 
   // 外部からのイベントフォーカス機能を追加
   useEffect(() => {
-    // グローバル関数として画像モーダルを登録
     window.showImageModal = showImageModal
     
-    // 通常のフォーカス（吹き出しなし）
+    window.showAllEventsOnMap = () => {
+      if (!map || markers.length === 0) return
+      
+      const bounds = new google.maps.LatLngBounds()
+      markers.forEach(marker => {
+        bounds.extend(marker.getPosition()!)
+      })
+      map.fitBounds(bounds)
+      
+      if (infoWindow) {
+        infoWindow.close()
+      }
+    }
+    
     window.focusOnEvent = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
       
@@ -484,23 +638,19 @@ export const EventMap: React.FC<EventMapProps> = ({
       const targetLng = event.location.geo.lng + offset.lng
       const zoomLevel = isMobile() ? 15 : 17
       
-      // ふわっとアニメーション移動
       smoothPanTo(targetLat, targetLng, zoomLevel, 600)
     }
     
-    // フォーカス＋吹き出し表示
     window.focusOnEventWithPopup = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
       
       const offset = getMapOffset()
       const targetLat = event.location.geo.lat + offset.lat
       const targetLng = event.location.geo.lng + offset.lng
-      const zoomLevel = isMobile() ? 16 : 19 // 徒歩圏内ズーム
+      const zoomLevel = isMobile() ? 16 : 19
       
-      // ふわっとアニメーション移動
       smoothPanTo(targetLat, targetLng, zoomLevel, 800)
       
-      // 該当するマーカーを見つけて吹き出しを表示
       setTimeout(() => {
         const targetMarker = markers.find(marker => {
           const position = marker.getPosition()
@@ -510,14 +660,12 @@ export const EventMap: React.FC<EventMapProps> = ({
         })
         
         if (targetMarker && infoWindow) {
-          // 強化版InfoWindowを設定
           infoWindow.setContent(createEnhancedInfoWindow(event))
           infoWindow.open(map, targetMarker)
         }
-                }, 600) // アニメーション完了後に吹き出し表示
+      }, 600)
     }
     
-    // 現在地フォーカス
     window.focusOnUserLocation = (location: {lat: number, lng: number}) => {
       if (!map) return
       
@@ -525,52 +673,36 @@ export const EventMap: React.FC<EventMapProps> = ({
       const targetLat = location.lat + offset.lat
       const targetLng = location.lng + offset.lng
       
-      // ふわっとアニメーション移動
       smoothPanTo(targetLat, targetLng, 15, 700)
     }
   }, [map, markers, infoWindow])
 
   // 現在地マーカーの更新
   useEffect(() => {
-    console.log('🔄 現在地マーカー更新:', { 
-      map: !!map, 
-      userLocation,
-      hasGoogle: !!window.google 
-    })
+    if (!map || !userLocation || !window.google) return
     
-    if (!map || !userLocation || !window.google) {
-      console.log('⚠️ マップ、位置情報、またはGoogleライブラリがありません')
-      return
-    }
-    
-    // 既存の現在地マーカーを削除
     if (userMarker) {
-      console.log('🗑️ 既存マーカーを削除')
       userMarker.setMap(null)
     }
     
-    console.log('📍 新しい現在地マーカーを作成:', userLocation)
-    
     try {
-      // 新しい現在地マーカーを作成（より目立つデザイン）
       const newUserMarker = new google.maps.Marker({
         position: userLocation,
         map: map,
         title: '現在地',
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 12, // より大きく
-          fillColor: '#1a73e8', // より鮮やかな青
+          scale: 12,
+          fillColor: '#1a73e8',
           fillOpacity: 1,
           strokeColor: '#ffffff',
-          strokeWeight: 4, // より太い白縁
+          strokeWeight: 4,
           strokeOpacity: 1
         },
-        zIndex: 2000, // より高いzIndex
-        optimized: false // アニメーション有効
+        zIndex: 2000,
+        optimized: false
       })
       
-      // パルスアニメーション用の外側円
       const pulseMarker = new google.maps.Marker({
         position: userLocation,
         map: map,
@@ -588,8 +720,6 @@ export const EventMap: React.FC<EventMapProps> = ({
       })
       
       setUserMarker(newUserMarker)
-      
-      console.log('✅ 現在地マーカーを配置完了（パルス効果付き）')
       
     } catch (error) {
       console.error('❌ マーカー作成エラー:', error)
