@@ -147,7 +147,7 @@ ${siteUrl}`
       </div>
 
       {/* 地図エリア */}
-      <div style={{ position: 'absolute', top: window.innerWidth <= 768 ? '50px' : '60px', left: 0, right: 0, bottom: 0, backgroundColor: '#f5f5f5' }}>
+      <div style={{ position: 'absolute', top: window.innerWidth <= 768 ? '95px' : '105px', left: 0, right: 0, bottom: 0, backgroundColor: '#f5f5f5' }}>
         <EventMap events={activeEventsWithLocation} selectedEvent={selectedEvent} onEventSelect={setSelectedEvent} userLocation={userLocation} />
       </div>
 
