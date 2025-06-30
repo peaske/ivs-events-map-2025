@@ -3,6 +3,9 @@ import { Loader } from '@googlemaps/js-api-loader'
 import type { Event } from '../hooks/useEvents'
 import { analytics } from '../utils/analytics';
 
+// 🔥 FIXED: 型定義を最上部に移動
+type DateFilter = '7/1' | '7/2' | '7/3' | '7/4' | 'all'
+
 // グローバル型定義を追加
 declare global {
   interface Window {
@@ -11,6 +14,7 @@ declare global {
     focusOnUserLocation?: (location: {lat: number, lng: number}) => void;
     showImageModal?: (imageUrl: string, eventTitle: string) => void;
     showAllEventsOnMap?: () => void;
+    preserveInfoWindow?: boolean;
   }
 }
 
@@ -90,6 +94,64 @@ export const EventMap: React.FC<EventMapProps> = ({
   const [infoWindow, setInfoWindow] = useState<google.maps.InfoWindow | null>(null)
   const [userMarker, setUserMarker] = useState<google.maps.Marker | null>(null)
   const [isInitialLoad, setIsInitialLoad] = useState(true)
+  const [infoWindowVisible, setInfoWindowVisible] = useState(false)
+  const [currentInfoEvent, setCurrentInfoEvent] = useState<any>(null)
+  const [dateFilter, setDateFilter] = useState<DateFilter>('all')
+
+  // 🔥 PERFECT: 完璧フィルター関数（日付計算修正）
+  const applyDateFilter = (filter: DateFilter) => {
+    if (!markers.length) return
+    
+    console.log(`🚀 完璧フィルター適用: ${filter}`)
+    
+    markers.forEach((marker) => {
+      const event = events.find(e => 
+        e.location?.geo?.lat === marker.getPosition()?.lat() &&
+        e.location?.geo?.lng === marker.getPosition()?.lng()
+      )
+      
+      if (!event) {
+        marker.setVisible(false)
+        return
+      }
+      
+      if (filter === 'all') {
+        marker.setVisible(true)
+        return
+      }
+      
+      try {
+        // 🔥 FIXED: 日付解析を完璧に修正
+        let eventDate: Date
+        
+        if (typeof event.startAt === 'string') {
+          eventDate = new Date(event.startAt)
+        } else if (typeof event.startAt === 'number') {
+          eventDate = event.startAt > 1000000000000 ? new Date(event.startAt) : new Date(event.startAt * 1000)
+        } else {
+          eventDate = new Date(event.startAt)
+        }
+        
+        // 🔥 FIXED: 日本時間補正（UTC+9）
+        const japanDate = new Date(eventDate.getTime() + (9 * 60 * 60 * 1000))
+        const eventMonth = japanDate.getMonth() + 1
+        const eventDay = japanDate.getDate()
+        const eventDateStr = `${eventMonth}/${eventDay}`
+        
+        // 🔥 FIXED: 厳密な日付マッチング
+        const shouldShow = eventDateStr === filter
+        marker.setVisible(shouldShow)
+        
+        console.log(`📍 ${event.title.substring(0, 15)}: 生データ=${event.startAt} → JST=${japanDate.toLocaleDateString('ja-JP')} → ${eventDateStr} → フィルター=${filter} → 表示=${shouldShow}`)
+      } catch (error) {
+        console.error('❌ 日付解析エラー:', error)
+        marker.setVisible(false)
+      }
+    })
+    
+    const visibleCount = markers.filter(m => m.getVisible()).length
+    console.log(`✅ 完璧フィルター完了: 全${markers.length}個中 ${visibleCount}個表示`)
+  }
 
   // イベント画像のプリロード
   useEffect(() => {
@@ -453,6 +515,25 @@ export const EventMap: React.FC<EventMapProps> = ({
     return { lat: 0, lng: 0 }
   }
 
+  // InfoWindow表示関数
+  const showInfoWindow = (event: any, marker: google.maps.Marker) => {
+    if (!infoWindow || !map) return
+    
+    infoWindow.setContent(createEnhancedInfoWindow(event))
+    infoWindow.open(map, marker)
+    setInfoWindowVisible(true)
+    setCurrentInfoEvent(event)
+  }
+
+  // InfoWindow非表示関数
+  const hideInfoWindow = () => {
+    if (!infoWindow) return
+    
+    infoWindow.close()
+    setInfoWindowVisible(false)
+    setCurrentInfoEvent(null)
+  }
+
   // Google Maps初期化
   useEffect(() => {
     const initMap = async () => {
@@ -470,25 +551,14 @@ export const EventMap: React.FC<EventMapProps> = ({
         const mapInstance = new google.maps.Map(mapRef.current, {
           center: { lat: 35.6762, lng: 139.6503 },
           zoom: 6,
-          mapTypeControl: true,
-          mapTypeControlOptions: {
-            style: google.maps.MapTypeControlStyle.HORIZONTAL_BAR,
-            position: google.maps.ControlPosition.TOP_LEFT,
-            mapTypeIds: [
-              google.maps.MapTypeId.ROADMAP,
-              google.maps.MapTypeId.SATELLITE
-            ]
-          },
+          mapTypeControl: false,
           zoomControl: true,
           zoomControlOptions: {
             position: google.maps.ControlPosition.RIGHT_BOTTOM
           },
-          scaleControl: true,
+          scaleControl: false,
           streetViewControl: false,
-          fullscreenControl: true,
-          fullscreenControlOptions: {
-            position: google.maps.ControlPosition.TOP_RIGHT
-          },
+          fullscreenControl: false,
           styles: [
             {
               featureType: 'water',
@@ -543,16 +613,22 @@ export const EventMap: React.FC<EventMapProps> = ({
     initMap()
   }, [])
 
-  // マーカー更新
+  // マーカー更新（最適化版）
   useEffect(() => {
     if (!map || !window.google) return
 
-    markers.forEach(marker => marker.setMap(null))
-    setMarkers([])
+    const eventsWithGeo = events.filter(event => event.location?.geo?.lat && event.location?.geo?.lng)
+    
+    if (markers.length !== eventsWithGeo.length) {
+      console.log(`📍 マーカー数変更: ${markers.length} → ${eventsWithGeo.length}`)
+      
+      markers.forEach(marker => {
+        marker.setMap(null)
+        google.maps.event.clearInstanceListeners(marker)
+      })
+      setMarkers([])
 
-    const newMarkers = events
-      .filter(event => event.location?.geo?.lat && event.location?.geo?.lng)
-      .map(event => {
+      const newMarkers = eventsWithGeo.map(event => {
         const marker = new google.maps.Marker({
           position: {
             lat: event.location!.geo!.lat!,
@@ -566,7 +642,7 @@ export const EventMap: React.FC<EventMapProps> = ({
             fillOpacity: 1,
             strokeColor: '#ffffff',
             strokeWeight: 2,
-            scale: 1.2,
+            scale: 1.92, // 🔥 FINAL: 1.2 × 1.6 = 1.92 (1.6倍拡大)
             anchor: new google.maps.Point(12, 24)
           }
         })
@@ -580,37 +656,42 @@ export const EventMap: React.FC<EventMapProps> = ({
           
           smoothPanTo(targetLat, targetLng, zoomLevel, 800)
           
-          if (infoWindow) {
-            infoWindow.close()
-            infoWindow.setContent(createEnhancedInfoWindow(event))
-            infoWindow.open(map, marker)
-          }
+          setTimeout(() => {
+            showInfoWindow(event, marker)
+          }, 600)
         })
 
         return marker
       })
 
-    setMarkers(newMarkers)
-    
-    console.log(`📍 ${newMarkers.length}個のマーカーを配置`)
+      setMarkers(newMarkers)
+      console.log(`✅ ${newMarkers.length}個のマーカーを作成完了`)
 
-    if (newMarkers.length > 0 && isInitialLoad) {
-      const bounds = new google.maps.LatLngBounds()
-      newMarkers.forEach(marker => {
-        bounds.extend(marker.getPosition()!)
-      })
-      map.fitBounds(bounds)
-      
-      google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
-        if (map.getZoom()! > 15) {
-          map.setZoom(15)
-        }
-      })
-      
-      setIsInitialLoad(false)
+      if (newMarkers.length > 0 && isInitialLoad) {
+        const bounds = new google.maps.LatLngBounds()
+        newMarkers.forEach(marker => {
+          bounds.extend(marker.getPosition()!)
+        })
+        map.fitBounds(bounds)
+        
+        google.maps.event.addListenerOnce(map, 'bounds_changed', () => {
+          if (map.getZoom()! > 15) {
+            map.setZoom(15)
+          }
+        })
+        
+        setIsInitialLoad(false)
+      }
     }
 
-  }, [map, events, onEventSelect, infoWindow])
+  }, [map, events.length, onEventSelect, infoWindow])
+
+  // フィルター適用
+  useEffect(() => {
+    if (markers.length > 0) {
+      applyDateFilter(dateFilter)
+    }
+  }, [dateFilter, markers])
 
   // 外部からのイベントフォーカス機能を追加
   useEffect(() => {
@@ -619,15 +700,18 @@ export const EventMap: React.FC<EventMapProps> = ({
     window.showAllEventsOnMap = () => {
       if (!map || markers.length === 0) return
       
+      if (window.preserveInfoWindow && infoWindowVisible) {
+        console.log('🔒 InfoWindow表示中のため地図操作をスキップ')
+        return
+      }
+      
       const bounds = new google.maps.LatLngBounds()
       markers.forEach(marker => {
         bounds.extend(marker.getPosition()!)
       })
       map.fitBounds(bounds)
       
-      if (infoWindow) {
-        infoWindow.close()
-      }
+      hideInfoWindow()
     }
     
     window.focusOnEvent = (event: any) => {
@@ -644,6 +728,11 @@ export const EventMap: React.FC<EventMapProps> = ({
     window.focusOnEventWithPopup = (event: any) => {
       if (!map || !event.location?.geo?.lat || !event.location?.geo?.lng) return
       
+      if (window.preserveInfoWindow) {
+        console.log('🔒 InfoWindow保護中のため地図移動をスキップ')
+        return
+      }
+      
       const offset = getMapOffset()
       const targetLat = event.location.geo.lat + offset.lat
       const targetLng = event.location.geo.lng + offset.lng
@@ -659,9 +748,8 @@ export const EventMap: React.FC<EventMapProps> = ({
                  Math.abs(position.lng() - event.location.geo.lng) < 0.0001
         })
         
-        if (targetMarker && infoWindow) {
-          infoWindow.setContent(createEnhancedInfoWindow(event))
-          infoWindow.open(map, targetMarker)
+        if (targetMarker) {
+          showInfoWindow(event, targetMarker)
         }
       }, 600)
     }
@@ -675,7 +763,7 @@ export const EventMap: React.FC<EventMapProps> = ({
       
       smoothPanTo(targetLat, targetLng, 15, 700)
     }
-  }, [map, markers, infoWindow])
+  }, [map, markers, infoWindow, infoWindowVisible])
 
   // 現在地マーカーの更新
   useEffect(() => {
@@ -740,14 +828,116 @@ export const EventMap: React.FC<EventMapProps> = ({
   }, [map, selectedEvent])
 
   return (
-    <div 
-      ref={mapRef} 
-      style={{ 
-        width: '100%', 
-        height: '100%',
-        minHeight: '100vh',
-        backgroundColor: '#f5f5f5' 
-      }}
-    />
+    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+      <div 
+        ref={mapRef} 
+        style={{ 
+          width: '100%', 
+          height: '100%',
+          minHeight: '100vh',
+          backgroundColor: '#f5f5f5' 
+        }}
+      />
+      
+      <div style={{
+        position: 'absolute',
+        bottom: '20px',
+        left: '20px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '8px',
+        zIndex: 1000
+      }}>
+        {(['7/1', '7/2', '7/3', '7/4'] as DateFilter[]).map((date) => (
+          <button
+            key={date}
+            onClick={() => {
+              console.log(`🔘 軽量フィルター選択: ${date}`)
+              setDateFilter(date)
+            }}
+            style={{
+              width: window.innerWidth <= 768 ? '40px' : '48px',
+              height: window.innerWidth <= 768 ? '40px' : '48px',
+              borderRadius: '50%',
+              backgroundColor: dateFilter === date ? '#1a73e8' : 'white',
+              color: dateFilter === date ? 'white' : '#3c4043',
+              border: '1px solid #dadce0',
+              fontSize: window.innerWidth <= 768 ? '10px' : '12px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
+            onMouseEnter={(e) => {
+              if (dateFilter !== date) {
+                e.currentTarget.style.backgroundColor = '#f8f9fa'
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (dateFilter !== date) {
+                e.currentTarget.style.backgroundColor = 'white'
+              }
+            }}
+          >
+            {date}
+          </button>
+        ))}
+        
+        <button
+          onClick={() => {
+            console.log('🔘 全イベント表示選択')
+            setDateFilter('all')
+          }}
+          style={{
+            width: window.innerWidth <= 768 ? '40px' : '48px',
+            height: window.innerWidth <= 768 ? '40px' : '48px',
+            borderRadius: '50%',
+            backgroundColor: dateFilter === 'all' ? '#34a853' : 'white',
+            color: dateFilter === 'all' ? 'white' : '#34a853',
+            border: '1px solid #dadce0',
+            fontSize: window.innerWidth <= 768 ? '14px' : '18px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onMouseEnter={(e) => {
+            if (dateFilter !== 'all') {
+              e.currentTarget.style.backgroundColor = '#f8f9fa'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (dateFilter !== 'all') {
+              e.currentTarget.style.backgroundColor = 'white'
+            }
+          }}
+        >
+          ✕
+        </button>
+        
+        <div style={{
+          backgroundColor: 'rgba(0,0,0,0.9)',
+          color: 'white',
+          padding: '8px 12px',
+          borderRadius: '8px',
+          fontSize: '9px',
+          marginTop: '12px',
+          textAlign: 'left',
+          fontFamily: 'monospace'
+        }}>
+          <div style={{ color: '#4fc3f7', marginBottom: '4px' }}>⚡ 完璧フィルター v2.0</div>
+          選択: <span style={{ color: '#ffeb3b' }}>{dateFilter}</span><br/>
+          総マーカー: <span style={{ color: '#81c784' }}>{markers.length}個</span><br/>
+          表示中: <span style={{ color: '#f48fb1' }}>{markers.filter(m => m.getVisible && m.getVisible()).length}個</span><br/>
+          非表示: <span style={{ color: '#ff8a65' }}>{markers.filter(m => m.getVisible && !m.getVisible()).length}個</span>
+        </div>
+      </div>
+    </div>
   )
 }
