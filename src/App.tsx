@@ -150,10 +150,10 @@ ${siteUrl}`
         <EventMap events={activeEventsWithLocation} selectedEvent={selectedEvent} onEventSelect={setSelectedEvent} userLocation={userLocation} />
       </div>
 
-      {/* 🔥 MODERN: ヘッダー（ボーダーレス+軽いシャドウ） */}
+      {/* 🔥 ADJUSTED: ヘッダー（3px下げ） */}
       <div style={{ 
         position: 'fixed', 
-        top: window.innerWidth <= 768 ? '10px' : '16px', 
+        top: window.innerWidth <= 768 ? '13px' : '19px', 
         left: '50%', 
         transform: 'translateX(-50%)',
         width: window.innerWidth <= 768 ? '95%' : '50%',
@@ -264,8 +264,6 @@ ${siteUrl}`
             <h3 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>イベント一覧</h3>
             <div style={{ fontSize: '14px', opacity: 0.9 }}>
               {showBottomModal ? '▼' : '▲'} {activeEvents.length}件
-              {/* 🔥 NEW: InfoWindow保護状態表示（デバッグ用） */}
-              {window.preserveInfoWindow && <span style={{ marginLeft: '8px', fontSize: '12px', opacity: 0.7 }}>🔒</span>}
             </div>
           </div>
         </div>

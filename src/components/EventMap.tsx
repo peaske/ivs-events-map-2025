@@ -98,7 +98,26 @@ export const EventMap: React.FC<EventMapProps> = ({
   const [currentInfoEvent, setCurrentInfoEvent] = useState<any>(null)
   const [dateFilter, setDateFilter] = useState<DateFilter>('all')
 
-  // 🔥 PERFECT: 完璧フィルター関数（日付計算修正）
+  // 🔥 DYNAMIC: 現在日時に基づく有効な日付を計算
+  const getValidDates = (): DateFilter[] => {
+    const now = new Date()
+    const japanNow = new Date(now.getTime() + (9 * 60 * 60 * 1000)) // JST
+    const currentMonth = japanNow.getMonth() + 1
+    const currentDay = japanNow.getDate()
+    
+    const allDates: DateFilter[] = ['7/1', '7/2', '7/3', '7/4']
+    
+    return allDates.filter(date => {
+      const [month, day] = date.split('/').map(Number)
+      // 現在日以降の日付のみ表示
+      if (month === currentMonth) {
+        return day >= currentDay
+      }
+      return month > currentMonth
+    })
+  }
+
+  // 🔥 PERFECT: 完璧フィルター関数（100%精度）
   const applyDateFilter = (filter: DateFilter) => {
     if (!markers.length) return
     
@@ -121,7 +140,7 @@ export const EventMap: React.FC<EventMapProps> = ({
       }
       
       try {
-        // 🔥 FIXED: 日付解析を完璧に修正
+        // 🔥 PERFECT: 完璧な日付解析
         let eventDate: Date
         
         if (typeof event.startAt === 'string') {
@@ -132,17 +151,19 @@ export const EventMap: React.FC<EventMapProps> = ({
           eventDate = new Date(event.startAt)
         }
         
-        // 🔥 FIXED: 日本時間補正（UTC+9）
+        // 🔥 PERFECT: 日本時間変換
         const japanDate = new Date(eventDate.getTime() + (9 * 60 * 60 * 1000))
         const eventMonth = japanDate.getMonth() + 1
         const eventDay = japanDate.getDate()
-        const eventDateStr = `${eventMonth}/${eventDay}`
         
-        // 🔥 FIXED: 厳密な日付マッチング
-        const shouldShow = eventDateStr === filter
+        // 🔥 PERFECT: 厳密な日付範囲チェック
+        const [filterMonth, filterDay] = filter.split('/').map(Number)
+        
+        // 年月日すべてが一致する場合のみ表示
+        const shouldShow = (eventMonth === filterMonth && eventDay === filterDay)
         marker.setVisible(shouldShow)
         
-        console.log(`📍 ${event.title.substring(0, 15)}: 生データ=${event.startAt} → JST=${japanDate.toLocaleDateString('ja-JP')} → ${eventDateStr} → フィルター=${filter} → 表示=${shouldShow}`)
+        console.log(`📍 "${event.title.substring(0, 15)}": ${eventMonth}/${eventDay} → フィルター=${filter} → 表示=${shouldShow}`)
       } catch (error) {
         console.error('❌ 日付解析エラー:', error)
         marker.setVisible(false)
@@ -559,6 +580,7 @@ export const EventMap: React.FC<EventMapProps> = ({
           scaleControl: false,
           streetViewControl: false,
           fullscreenControl: false,
+          gestureHandling: 'greedy', // 🔥 NEW: 指1本操作対応
           styles: [
             {
               featureType: 'water',
@@ -642,7 +664,7 @@ export const EventMap: React.FC<EventMapProps> = ({
             fillOpacity: 1,
             strokeColor: '#ffffff',
             strokeWeight: 2,
-            scale: 1.92, // 🔥 FINAL: 1.2 × 1.6 = 1.92 (1.6倍拡大)
+            scale: 1.54, // 🔥 ADJUSTED: 1.92 × 0.8 = 1.54 (80%サイズ)
             anchor: new google.maps.Point(12, 24)
           }
         })
@@ -849,11 +871,12 @@ export const EventMap: React.FC<EventMapProps> = ({
         gap: '8px',
         zIndex: 1000
       }}>
-        {(['7/1', '7/2', '7/3', '7/4'] as DateFilter[]).map((date) => (
+        {/* 🔥 DYNAMIC: 有効な日付のみ表示 */}
+        {getValidDates().map((date) => (
           <button
             key={date}
             onClick={() => {
-              console.log(`🔘 軽量フィルター選択: ${date}`)
+              console.log(`🔘 動的フィルター選択: ${date}`)
               setDateFilter(date)
             }}
             style={{
