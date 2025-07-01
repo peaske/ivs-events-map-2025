@@ -150,7 +150,7 @@ ${siteUrl}`
         <EventMap events={activeEventsWithLocation} selectedEvent={selectedEvent} onEventSelect={setSelectedEvent} userLocation={userLocation} />
       </div>
 
-      {/* 🔥 PERFECT: ヘッダー（20px角丸+完璧UI） */}
+      {/* 🔥 MODERN: ヘッダー（ボーダーレス+軽いシャドウ） */}
       <div style={{ 
         position: 'fixed', 
         top: window.innerWidth <= 768 ? '10px' : '16px', 
@@ -160,10 +160,9 @@ ${siteUrl}`
         maxWidth: window.innerWidth <= 768 ? '360px' : '600px',
         backgroundColor: 'white', 
         borderRadius: '20px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.2)', 
+        boxShadow: '0 2px 4px rgba(0,0,0,0.15)', 
         zIndex: 1000, 
-        padding: window.innerWidth <= 768 ? '12px 16px' : '16px 20px',
-        border: '1px solid rgba(0,0,0,0.12)'
+        padding: window.innerWidth <= 768 ? '12px 16px' : '16px 20px'
       }}>
         <h1 style={{ 
           margin: '0 0 10px 0', 
@@ -178,7 +177,7 @@ ${siteUrl}`
           IVS Events Map 2025
         </h1>
         
-        {/* 🔥 PERFECT: 20px角丸ボタン+アクティブ色 */}
+        {/* 🔥 FINAL: ヘッダーボタン（シャドウなし） */}
         <div style={{ 
           display: 'flex', 
           width: '100%',
@@ -188,15 +187,14 @@ ${siteUrl}`
           <button onClick={refetch} disabled={loading} style={{ 
             flex: '1',
             padding: window.innerWidth <= 768 ? '8px 6px' : '10px 8px', 
-            backgroundColor: loading ? '#38c37b' : 'white', 
+            backgroundColor: loading ? '#38c37b' : '#f5f5f5', 
             color: loading ? 'white' : '#3c4043', 
-            border: '1px solid #dadce0', 
+            border: 'none', 
             borderRadius: '20px', 
             cursor: loading ? 'not-allowed' : 'pointer', 
             fontSize: window.innerWidth <= 768 ? '12px' : '14px', 
             fontWeight: '500',
             textAlign: 'center',
-            boxShadow: loading ? '0 2px 8px rgba(56,195,123,0.3)' : '0 1px 3px rgba(0,0,0,0.12)',
             transition: 'all 0.2s ease'
           }}>
             {loading ? '取得中...' : '最新データ'}
@@ -208,43 +206,40 @@ ${siteUrl}`
           }} style={{ 
             flex: '1',
             padding: window.innerWidth <= 768 ? '8px 6px' : '10px 8px', 
-            backgroundColor: 'white', 
+            backgroundColor: '#f5f5f5', 
             color: '#3c4043', 
-            border: '1px solid #dadce0', 
+            border: 'none', 
             borderRadius: '20px', 
             cursor: 'pointer', 
             fontSize: window.innerWidth <= 768 ? '12px' : '14px', 
             fontWeight: '500',
             textAlign: 'center',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
             transition: 'all 0.2s ease'
           }}>全体マップ</button>
           <button onClick={getCurrentLocation} style={{ 
             flex: '1',
             padding: window.innerWidth <= 768 ? '8px 6px' : '10px 8px', 
-            backgroundColor: userLocation ? '#38c37b' : 'white', 
+            backgroundColor: userLocation ? '#38c37b' : '#f5f5f5', 
             color: userLocation ? 'white' : '#3c4043', 
-            border: userLocation ? '1px solid #38c37b' : '1px solid #dadce0', 
+            border: 'none', 
             borderRadius: '20px', 
             cursor: 'pointer', 
             fontSize: window.innerWidth <= 768 ? '12px' : '14px', 
             fontWeight: '500',
             textAlign: 'center',
-            boxShadow: userLocation ? '0 2px 8px rgba(56,195,123,0.3)' : '0 1px 3px rgba(0,0,0,0.12)',
             transition: 'all 0.2s ease'
           }}>現在地</button>
           <button onClick={handleShare} title="シェア" style={{ 
             flex: '1',
             padding: window.innerWidth <= 768 ? '8px 6px' : '10px 8px', 
-            backgroundColor: 'white', 
+            backgroundColor: '#f5f5f5', 
             color: '#1a73e8', 
-            border: '1px solid #dadce0', 
+            border: 'none', 
             borderRadius: '20px', 
             cursor: 'pointer', 
             fontSize: window.innerWidth <= 768 ? '12px' : '14px', 
             fontWeight: '500',
             textAlign: 'center',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
             transition: 'all 0.2s ease'
           }}>
             🙏🏻シェア

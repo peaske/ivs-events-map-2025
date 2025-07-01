@@ -841,7 +841,8 @@ export const EventMap: React.FC<EventMapProps> = ({
       
       <div style={{
         position: 'absolute',
-        bottom: '20px',
+        top: '50%',
+        transform: 'translateY(-50%)',
         left: '20px',
         display: 'flex',
         flexDirection: 'column',
@@ -861,11 +862,11 @@ export const EventMap: React.FC<EventMapProps> = ({
               borderRadius: '50%',
               backgroundColor: dateFilter === date ? '#1a73e8' : 'white',
               color: dateFilter === date ? 'white' : '#3c4043',
-              border: '1px solid #dadce0',
+              border: 'none',
               fontSize: window.innerWidth <= 768 ? '10px' : '12px',
               fontWeight: '500',
               cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+              boxShadow: dateFilter === date ? '0 2px 8px rgba(26,115,232,0.3)' : '0 2px 4px rgba(0,0,0,0.15)',
               transition: 'all 0.2s ease',
               display: 'flex',
               alignItems: 'center',
@@ -874,11 +875,13 @@ export const EventMap: React.FC<EventMapProps> = ({
             onMouseEnter={(e) => {
               if (dateFilter !== date) {
                 e.currentTarget.style.backgroundColor = '#f8f9fa'
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)'
               }
             }}
             onMouseLeave={(e) => {
               if (dateFilter !== date) {
                 e.currentTarget.style.backgroundColor = 'white'
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.15)'
               }
             }}
           >
@@ -897,11 +900,11 @@ export const EventMap: React.FC<EventMapProps> = ({
             borderRadius: '50%',
             backgroundColor: dateFilter === 'all' ? '#34a853' : 'white',
             color: dateFilter === 'all' ? 'white' : '#34a853',
-            border: '1px solid #dadce0',
+            border: 'none',
             fontSize: window.innerWidth <= 768 ? '14px' : '18px',
             fontWeight: 'bold',
             cursor: 'pointer',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.12)',
+            boxShadow: dateFilter === 'all' ? '0 2px 8px rgba(52,168,83,0.3)' : '0 2px 4px rgba(0,0,0,0.15)',
             transition: 'all 0.2s ease',
             display: 'flex',
             alignItems: 'center',
@@ -910,33 +913,18 @@ export const EventMap: React.FC<EventMapProps> = ({
           onMouseEnter={(e) => {
             if (dateFilter !== 'all') {
               e.currentTarget.style.backgroundColor = '#f8f9fa'
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.2)'
             }
           }}
           onMouseLeave={(e) => {
             if (dateFilter !== 'all') {
               e.currentTarget.style.backgroundColor = 'white'
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.15)'
             }
           }}
         >
           ✕
         </button>
-        
-        <div style={{
-          backgroundColor: 'rgba(0,0,0,0.9)',
-          color: 'white',
-          padding: '8px 12px',
-          borderRadius: '8px',
-          fontSize: '9px',
-          marginTop: '12px',
-          textAlign: 'left',
-          fontFamily: 'monospace'
-        }}>
-          <div style={{ color: '#4fc3f7', marginBottom: '4px' }}>⚡ 完璧フィルター v2.0</div>
-          選択: <span style={{ color: '#ffeb3b' }}>{dateFilter}</span><br/>
-          総マーカー: <span style={{ color: '#81c784' }}>{markers.length}個</span><br/>
-          表示中: <span style={{ color: '#f48fb1' }}>{markers.filter(m => m.getVisible && m.getVisible()).length}個</span><br/>
-          非表示: <span style={{ color: '#ff8a65' }}>{markers.filter(m => m.getVisible && !m.getVisible()).length}個</span>
-        </div>
       </div>
     </div>
   )
