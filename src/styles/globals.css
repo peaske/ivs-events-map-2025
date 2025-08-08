@@ -1,0 +1,182 @@
+/* 🎨 REFACTORED: 統合スタイルシステム - グローバル変数 */
+
+:root {
+  /* カラーシステム */
+  --color-primary: #1a73e8;
+  --color-success: #38c37b;
+  --color-success-hover: #2ea169;
+  --color-error: #ea4335;
+  --color-warning: #fbbc04;
+  --color-background: #ffffff;
+  --color-background-secondary: #f8f9fa;
+  --color-background-overlay: rgba(0, 0, 0, 0.5);
+  --color-background-overlay-dark: rgba(0, 0, 0, 0.8);
+  --color-border: #e0e0e0;
+  --color-border-light: #f0f0f0;
+  --color-text-primary: #3c4043;
+  --color-text-secondary: #5f6368;
+  --color-text-muted: #666;
+  --color-text-inverse: #ffffff;
+  --color-shadow: rgba(0, 0, 0, 0.15);
+  --color-shadow-light: rgba(0, 0, 0, 0.05);
+  --color-shadow-dark: rgba(0, 0, 0, 0.3);
+
+  /* サイズシステム */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+  --spacing-2xl: 24px;
+  --spacing-3xl: 30px;
+  
+  /* フォントシステム */
+  --font-family: system-ui, -apple-system, sans-serif;
+  --font-size-xs: 10px;
+  --font-size-sm: 11px;
+  --font-size-base: 12px;
+  --font-size-md: 14px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 22px;
+  --font-size-3xl: 24px;
+  
+  /* 境界線システム */
+  --border-radius-sm: 6px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+  --border-radius-xl: 16px;
+  --border-radius-2xl: 20px;
+  --border-radius-full: 50%;
+  
+  /* 影システム */
+  --shadow-sm: 0 1px 2px var(--color-shadow-light);
+  --shadow-md: 0 2px 4px var(--color-shadow);
+  --shadow-lg: 0 4px 8px var(--color-shadow);
+  --shadow-xl: 0 8px 16px var(--color-shadow);
+  --shadow-2xl: 0 10px 25px var(--color-shadow-dark);
+  
+  /* アニメーション */
+  --transition-fast: 0.2s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  /* レイアウト */
+  --header-height-mobile: 120px;
+  --header-height-desktop: 140px;
+  --modal-height: 40vh;
+  --modal-peek-height: 32.2vh;
+  
+  /* Z-index システム */
+  --z-map: 1;
+  --z-header: 1000;
+  --z-modal: 2000;
+  --z-overlay: 3000;
+  --z-image-modal: 10000;
+  
+  /* ブレイクポイント */
+  --breakpoint-mobile: 768px;
+}
+
+/* レスポンシブヘルパー */
+@media (max-width: 768px) {
+  :root {
+    --spacing-responsive: var(--spacing-sm);
+    --font-size-responsive-title: var(--font-size-xl);
+    --font-size-responsive-button: var(--font-size-base);
+    --filter-size: 40px;
+    --header-top-offset: 13px;
+  }
+}
+
+@media (min-width: 769px) {
+  :root {
+    --spacing-responsive: var(--spacing-md);
+    --font-size-responsive-title: var(--font-size-2xl);
+    --font-size-responsive-button: var(--font-size-md);
+    --filter-size: 48px;
+    --header-top-offset: 19px;
+  }
+}
+
+/* ベーススタイル */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ユーティリティクラス */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.no-scroll {
+  overflow: hidden;
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+/* フォーカススタイル */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

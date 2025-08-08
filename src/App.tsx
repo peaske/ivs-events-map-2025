@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { EventMap } from './components/EventMap'
 import { useEvents } from './hooks/useEvents'
-import './App.css'
+
 
 function App() {
   const { 
