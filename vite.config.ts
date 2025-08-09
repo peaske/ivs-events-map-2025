@@ -6,16 +6,7 @@ export default defineConfig({
   base: '/ivs-events-map-2025/',
   build: {
     outDir: 'dist',
-    assetsDir: 'assets',
     sourcemap: false,
-    minify: 'terser',
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'google-maps': ['@googlemaps/js-api-loader']
-        }
-      }
-    }
-  },
-  publicDir: 'public'
+    minify: false
+  }
 })
