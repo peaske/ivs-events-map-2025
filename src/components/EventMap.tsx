@@ -25,7 +25,7 @@ interface EventMapProps {
   userLocation?: {lat: number, lng: number} | null
 }
 
-const GOOGLE_MAPS_API_KEY = 'AIzaSyDAPia8Rfqck7my2z3Wj1NkBqLornWFutk'
+const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || 'AIzaSyB-ky1S0dYy_GPbmQU4gWGg7ptdorlkCAI'
 
 // 画像キャッシュとプリロード管理
 class ImageCache {

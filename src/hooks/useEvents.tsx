@@ -58,14 +58,21 @@ export const useEvents = () => {
         eventData = response.data.data
       }
       
-      // 座標があるイベントのみフィルタリング
-      const eventsWithLocation = eventData.filter(event => 
-        event.location?.lat && event.location?.lng
-      )
+      // 座標データ構造を統一（4S API対応）
+      const normalizedEvents = eventData.map(event => ({
+        ...event,
+        location: event.location ? {
+          ...event.location,
+          geo: {
+            lat: event.location.lat || event.location.geo?.lat,
+            lng: event.location.lng || event.location.geo?.lng
+          }
+        } : undefined
+      }))
       
-      console.log(`📍 座標付きイベント: ${eventsWithLocation.length}/${eventData.length}件`)
+      console.log(`📍 データ正規化完了: ${normalizedEvents.length}件`)
       
-      setEvents(eventData) // 全イベントを保存
+      setEvents(normalizedEvents) // 正規化済みイベントを保存
       
     } catch (err: any) {
       console.error('❌ API Error:', err)
