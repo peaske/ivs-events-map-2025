@@ -1,0 +1,56 @@
+{
+  "name": "@peaske/claude-tracker",
+  "version": "5.0.10",
+  "description": "Claude Desktop chat history tracker with ENV file integration and JSONL storage",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "claude-tracker": "./cli.js"
+  },
+  "scripts": {
+    "test": "node index.js --test",
+    "build": "npm run build-dxt",
+    "build-dxt": "bash build-dxt.sh",
+    "postinstall": "node install.cjs"
+  },
+  "keywords": [
+    "claude",
+    "claude-desktop", 
+    "chat-tracker",
+    "env-file",
+    "project-integration",
+    "rag-system",
+    "real-time-sync",
+    "development-workflow",
+    "context-inheritance",
+    "mcp-server"
+  ],
+  "author": "peaske",
+  "license": "MIT",
+  "homepage": "https://github.com/peaske/claude-tracker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/peaske/claude-tracker.git"
+  },
+  "bugs": {
+    "url": "https://github.com/peaske/claude-tracker/issues"
+  },
+  "files": [
+    "index.js",
+    "cli.js", 
+    "install.cjs",
+    "manifest.json",
+    "build-dxt.sh",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@anthropic-ai/dxt": "latest"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
