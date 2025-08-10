@@ -1,11 +1,11 @@
 {
   "name": "@peaske/claude-tracker",
-  "version": "5.0.11",
+  "version": "5.0.12",
   "description": "Claude Desktop chat history tracker with ENV file integration and JSONL storage",
   "main": "index.js",
   "type": "module",
   "bin": {
-    "claude-tracker": "./cli.js"
+    "claude-tracker": "./cli.cjs"
   },
   "scripts": {
     "test": "node index.js --test",
@@ -37,7 +37,7 @@
   },
   "files": [
     "index.js",
-    "cli.js", 
+    "cli.cjs", 
     "install.cjs",
     "manifest.json",
     "build-dxt.sh",
