@@ -1,7 +1,7 @@
 {
   "dxt_version": "0.1",
   "name": "@peaske/claude-tracker",
-  "version": "5.0.10",
+  "version": "5.0.11",
   "description": "Claude Desktop chat history tracker with ENV file integration and JSONL storage",
   "author": {
     "name": "peaske",

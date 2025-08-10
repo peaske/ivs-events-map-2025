@@ -1,4 +1,4 @@
-# Claude Tracker v5.0.10
+# Claude Tracker v5.0.11
 
 **Claude Desktop chat history tracker with ENV file integration**
 
@@ -31,7 +31,7 @@ Real-time updates and fixes: **[@peaske_en on 𝕏](https://x.com/peaske_en)**
 
 ## English | [日本語](#日本語) | [中文](#中文)
 
-### 🆙 **What's New in v5.0.10:**
+### 🆙 **What's New in v5.0.11:**
 - ✅ **完全CLIインターフェース** - `claude-tracker init` で確実セットアップ
 - ✅ **CommonJS安定化** - インストールエラー解消
 - ✅ **詳細エラー処理** - トラブルシューティング完備
@@ -67,7 +67,7 @@ npm install -g @peaske/claude-tracker
 claude-tracker init
 ```
 ⏱️ **所要時間:** 1～3分（DXTファイル生成含む）  
-✅ **成功メッセージ:** 「🎉 Claude Tracker v5.0.9 Setup Complete!」
+✅ **成功メッセージ:** 「🎉 Claude Tracker v5.0.11 Setup Complete!」
 
 ### **📁 Step 3: DXTファイル存在確認**
 1. **Finder**を開く
@@ -396,7 +396,7 @@ chmod +x build-dxt.sh
 
 ---
 
-**Claude Tracker v5.0.9**  
+**Claude Tracker v5.0.11**  
 *Claude Desktop chat history tracker with ENV file integration*
 
 ---
