@@ -1,6 +1,6 @@
 {
   "name": "@peaske/claude-tracker",
-  "version": "5.0.12",
+  "version": "5.0.13",
   "description": "Claude Desktop chat history tracker with ENV file integration and JSONL storage",
   "main": "index.js",
   "type": "module",

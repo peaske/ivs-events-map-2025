@@ -1,41 +1,36 @@
-# Claude Tracker v5.0.11
+# Claude Tracker v5.0.13
 
 **Claude Desktop chat history tracker with ENV file integration**
 
 Save Claude conversations as lightweight pointers in your project's .env file, with full conversation data stored in efficient JSONL format.
 
-## 🚧 **Current Status: Debug Phase**
+## 🆕 **Stable Release - CLI Command Interface**
 
-**✅ Successfully Implemented:**
-- ✅ npm install → Auto-copy all files to ~/Documents/claude-tracker
-- ✅ DXT file generation via ./build-dxt.sh
-- ✅ Claude Desktop extension recognition (v5.0.6)
-- ✅ JSONL-Pointer architecture (12-Factor App compliant)
-- ✅ 50KB ENV auto-cleanup system
+**✅ Working Features:**
+- ✅ **Complete CLI Interface** - `claude-tracker init` for reliable setup
+- ✅ **CommonJS Stability** - Installation errors resolved
+- ✅ **Detailed Error Handling** - Complete troubleshooting guide
+- ✅ **Accurate Documentation** - No more "npm install only" false promises
+- ✅ **Community Support** - [@peaske_en](https://x.com/peaske_en) for real-time help
 
-**🔧 Currently Debugging:**
-- 🔧 MCP Server connection ("Server disconnected" error)
-- 🔧 Node.js path resolution in DXT environment
-- 🔧 CommonJS/ES modules compatibility
+**📋 CLI Commands:**
+- `claude-tracker init` - Complete setup (recommended)
+- `claude-tracker status` - Installation status check
+- `claude-tracker build-dxt` - DXT file regeneration
+- `claude-tracker help` - Command help and documentation
 
-**📋 Improvement Plan:**
-1. **manifest.json optimization** → Simplified Node.js command structure
-2. **CommonJS conversion enhancement** → Better ES modules → CommonJS transformation
-3. **Server startup reliability** → Robust error handling and connection management
-4. **Path resolution fixes** → Cross-platform Node.js executable detection
-
-**🔄 Follow Development Progress:**
-Real-time updates and fixes: **[@peaske_en on 𝕏](https://x.com/peaske_en)**
+**🔄 Follow Development:**
+Real-time updates and support: **[@peaske_en on 𝕏](https://x.com/peaske_en)**
 
 ---
 
 ## English | [日本語](#日本語) | [中文](#中文)
 
-### 🆙 **What's New in v5.0.11:**
+### 🆙 **What's New in v5.0.13:**
 - ✅ **完全CLIインターフェース** - `claude-tracker init` で確実セットアップ
 - ✅ **CommonJS安定化** - インストールエラー解消
 - ✅ **詳細エラー処理** - トラブルシューティング完備
-- ✅ **適切な案内** - 「npm installだけ」の誤解表現削除
+- ✅ **README整理** - 重複コンテンツ削除で読みやすさ向上
 - 🔄 **コミュニティ連携** - [@peaske_en](https://x.com/peaske_en) でリアルタイムサポート
 
 ## Features
@@ -67,7 +62,7 @@ npm install -g @peaske/claude-tracker
 claude-tracker init
 ```
 ⏱️ **所要時間:** 1～3分（DXTファイル生成含む）  
-✅ **成功メッセージ:** 「🎉 Claude Tracker v5.0.11 Setup Complete!」
+✅ **成功メッセージ:** 「🎉 Claude Tracker v5.0.13 Setup Complete!」
 
 ### **📁 Step 3: DXTファイル存在確認**
 1. **Finder**を開く
@@ -267,34 +262,6 @@ CLAUDE_CHAT_20250104_1425_SESSION_END="Duration: 15min, Messages: 8"
 - **DXT拡張機能**: Claude Desktopへのドラッグ&ドロップ・インストール
 - **リアルタイム追跡**: チャットセッション中の会話保存
 
-## クイックスタート
-
-### 1. インストール
-```bash
-npm install -g @peaske/claude-tracker
-```
-
-### 2. Claude Desktopに追加
-1. **Claude Desktop** → **設定** → **拡張機能**を開く
-2. **ドラッグ&ドロップ**: `~/Documents/claude-tracker/claude-tracker-app.dxt`
-3. **「インストール」** → **「有効化」**をクリック
-
-### 3. 追跡開始
-Claude Desktopチャットで:
-```
-start_env_tracking Development/あなたのプロジェクト名
-```
-
-### 4. 結果
-会話がプロジェクトの.envファイルに保存されます：
-
-```bash
-# Development/あなたのプロジェクト名/.env
-CLAUDE_CHAT_20250104_1425_USER_1="新機能をどう実装すべきですか？"
-CLAUDE_CHAT_20250104_1425_ASSISTANT_1="まず要件を分析しましょう..."
-CLAUDE_CHAT_20250104_1425_SUMMARY="機能実装についての議論"
-```
-
 ## テスト方法
 
 ### テスト実行
@@ -396,7 +363,7 @@ chmod +x build-dxt.sh
 
 ---
 
-**Claude Tracker v5.0.11**  
+**Claude Tracker v5.0.13**  
 *Claude Desktop chat history tracker with ENV file integration*
 
 ---

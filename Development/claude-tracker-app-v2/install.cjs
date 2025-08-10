@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Claude Tracker v5.0.9 - PostInstall Script (CommonJS)
+ * Claude Tracker v5.0.13 - PostInstall Script (CommonJS)
  * Fallback setup for npm install postinstall hook
  */
 
@@ -10,7 +10,7 @@ const path = require('path');
 const os = require('os');
 
 async function setupClaudeTracker() {
-  console.log('📦 Claude Tracker v5.0.9 - PostInstall Hook\n');
+  console.log('📦 Claude Tracker v5.0.13 - PostInstall Hook\n');
   console.log('💡 For reliable setup, use: claude-tracker init\n');
 
   try {
@@ -67,7 +67,7 @@ async function setupClaudeTracker() {
 
     // Step 4: Record setup status
     const setupStatus = {
-      version: '5.0.9',
+      version: '5.0.13',
       installed_at: new Date().toISOString(),
       claude_tracker_dir: claudeTrackerDir,
       setup_method: 'postinstall',

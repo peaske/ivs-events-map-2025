@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Claude Tracker v5.0.9 - CLI Command
+ * Claude Tracker v5.0.13 - CLI Command
  * Proper CLI interface for setup and management
  */
 
@@ -19,7 +19,7 @@ const commands = {
 
 function showHelp() {
   console.log(`
-🎯 Claude Tracker v5.0.9 - CLI Commands
+🎯 Claude Tracker v5.0.13 - CLI Commands
 
 📋 Available Commands:
    claude-tracker init      Setup claude-tracker in ~/Documents/claude-tracker
@@ -38,7 +38,7 @@ function showHelp() {
 }
 
 async function initClaudeTracker() {
-  console.log('🚀 Claude Tracker v5.0.9 - Initialization Starting...\n');
+  console.log('🚀 Claude Tracker v5.0.13 - Initialization Starting...\n');
 
   try {
     // Step 1: Create claude-tracker directory
@@ -124,7 +124,7 @@ async function initClaudeTracker() {
 
     // Step 5: Create setup status
     const setupStatus = {
-      version: '5.0.9',
+      version: '5.0.13',
       installed_at: new Date().toISOString(),
       claude_tracker_dir: claudeTrackerDir,
       dxt_generated: true,
@@ -135,7 +135,7 @@ async function initClaudeTracker() {
     fs.writeFileSync(statusFilePath, JSON.stringify(setupStatus, null, 2));
 
     // Success message
-    console.log('\n🎉 Claude Tracker v5.0.9 Setup Complete!\n');
+    console.log('\n🎉 Claude Tracker v5.0.13 Setup Complete!\n');
     console.log('📋 What was created:');
     console.log(`   📁 Directory: ${claudeTrackerDir}`);
     console.log(`   📦 DXT file: Ready for Claude Desktop`);

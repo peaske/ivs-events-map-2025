@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Claude Tracker v5.0.6 - DXT Build Script
+# Claude Tracker v5.0.13 - DXT Build Script
 echo "🚀 Building Claude Tracker DXT Extension..."
 
 # Check if dxt CLI is available
@@ -110,7 +110,7 @@ echo "✅ Manifest validation passed"
 
 # Build DXT package
 echo "📦 Building DXT package..."
-$DXT_CMD pack --name claude-tracker-app
+$DXT_CMD pack
 
 if [ $? -eq 0 ]; then
     echo "✅ DXT build successful!"

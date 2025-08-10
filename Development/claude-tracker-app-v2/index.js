@@ -14,7 +14,7 @@ import os from 'os';
 import crypto from 'crypto';
 
 /**
- * Claude Tracker v5.0.9 - JSONL-based tracking system with ENV pointers
+ * Claude Tracker v5.0.13 - JSONL-based tracking system with ENV pointers
  * 
  * Key Features:
  * - JSONL storage for efficient log management
@@ -30,7 +30,7 @@ class ClaudeTrackerEnvServer {
     this.server = new Server(
       {
         name: "claude-tracker-jsonl",
-        version: "5.0.9",
+        version: "5.0.13",
       },
       {
         capabilities: {
@@ -649,13 +649,13 @@ Use 'start_env_tracking' with your project path (e.g., 'Development/nomaps-event
   async run() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error("Claude Tracker JSONL v5.0.9 server running on stdio");
+    console.error("Claude Tracker JSONL v5.0.13 server running on stdio");
   }
 }
 
 // Handle command line arguments
 if (process.argv.includes('--test')) {
-  console.log('✅ Claude Tracker JSONL v5.0.9 - Test passed!');
+  console.log('✅ Claude Tracker JSONL v5.0.13 - Test passed!');
   console.log('🚀 JSONL-based tracking system ready');
   console.log('📄 Project integration: ENV pointers + JSONL logs');
   console.log('🔄 Weekly rotation: Automated backup system');  
