@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NoMaps Events Map v3</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+        #container { display: flex; gap: 20px; max-width: 1200px; }
+        #map { width: 70%; height: 500px; border: 1px solid #ccc; }
+        #events { width: 30%; }
+        .event { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .event h3 { margin: 0 0 10px 0; color: #333; }
+        .event-time { color: #666; font-size: 0.9em; }
+        .event-address { color: #888; font-size: 0.9em; }
+        .loading { text-align: center; color: #666; }
+    </style>
+</head>
+<body>
+    <h1>🗺️ NoMaps Events Map v3</h1>
+    <div class="loading" id="loading">📡 Loading events...</div>
+    
+    <div id="container" style="display: none;">
+        <div id="map"></div>
+        <div id="events">
+            <h2>📅 Events List</h2>
+            <div id="event-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let map;
+        let events = [];
+
+        // Google Maps初期化
+        async function initMap() {
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+            // 札幌中心の地図
+            map = new Map(document.getElementById("map"), {
+                zoom: 13,
+                center: { lat: 43.0642, lng: 141.3469 }, // 札幌市中心
+                mapId: "DEMO_MAP_ID", // 基本地図
+            });
+
+            console.log('🗺️ Google Maps initialized');
+            loadEvents();
+        }
+
+        // イベント取得・表示
+        async function loadEvents() {
+            try {
+                console.log('📡 Fetching events from server...');
+                const response = await fetch('/api/events');
+                const data = await response.json();
+                
+                events = data.events || [];
+                console.log(`✅ ${events.length} events loaded`);
+
+                displayEventsOnMap();
+                displayEventsList();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('container').style.display = 'flex';
+
+            } catch (error) {
+                console.error('❌ Failed to load events:', error);
+                document.getElementById('loading').innerHTML = '❌ Failed to load events';
+            }
+        }
+
+        // マップにマーカー表示
+        function displayEventsOnMap() {
+            events.forEach((event, index) => {
+                const marker = new google.maps.marker.AdvancedMarkerElement({
+                    position: event.coordinates,
+                    map: map,
+                    title: event.name,
+                });
+
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div>
+                            <h3>${event.name}</h3>
+                            <p><strong>📍</strong> ${event.address}</p>
+                            <p><strong>🕐</strong> ${formatDateTime(event.start_at)}</p>
+                            <p><a href="${event.url}" target="_blank">🔗 View Event</a></p>
+                        </div>
+                    `
+                });
+
+                marker.addListener("click", () => {
+                    infoWindow.open(map, marker);
+                });
+            });
+        }
+
+        // イベント一覧表示
+        function displayEventsList() {
+            const listContainer = document.getElementById('event-list');
+            listContainer.innerHTML = events.map(event => `
+                <div class="event">
+                    <h3>${event.name}</h3>
+                    <div class="event-time">🕐 ${formatDateTime(event.start_at)}</div>
+                    <div class="event-address">📍 ${event.address}</div>
+                    <p>${event.description.substring(0, 100)}...</p>
+                    <a href="${event.url}" target="_blank">🔗 View Details</a>
+                </div>
+            `).join('');
+        }
+
+        // 日時フォーマット
+        function formatDateTime(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ja-JP', {
+                year: 'numeric',
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+
+    <!-- Google Maps API -->
+    <script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=initMap&libraries=marker">
+    </script>
+</body>
+</html>
